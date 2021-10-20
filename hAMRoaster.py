@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+## python 3.7.7, pandas 1.1.3, numpy 1.19.2
+#
 # In[1]:
 
 
@@ -10,6 +12,9 @@ import os
 import re
 import sys
 import argparse
+
+import warnings
+warnings.filterwarnings('ignore')
 
 parser = argparse.ArgumentParser()
 
@@ -330,23 +335,20 @@ cured_ham['drug_class'] = (cured_ham['drug_class']
      .apply(lambda x: x if type(x)== str else "")
      .apply(lambda x: ''.join(e for e in x if e.isalnum())))
 
-cured_ham['drug_class'].unique()
+#cured_ham['drug_class'].unique()
 #cured_ham.head()
 #cured_ham.shape ## jumps to over 2000 long
 
 
 # Now we have the `cured_ham` dataset, which contains all our observations and is cleaned so that every gene observation has a drug class assigned to it (unless the drug class is unknown). 
-# 
 # Now we want to assign those true/false -/+ values.
-# 
 
 # In[1400]:
-
-
 ## give false + / - values
 ref_abx = resistant_mock['abx_class'].str.lower()
 ref_sus_abx = smol_sus['abx_class'].str.lower()
-ref_abx_df = ref_abx
+ref_abx_df = resistant_mock
+
 def get_posneg(row):
 
     if row['drug_class'] in ref_abx:
@@ -360,85 +362,46 @@ def get_posneg(row):
     return
 
 
-# In[1401]:
-
-
-ref_abx.isin(cured_ham['drug_class'])
-
-
-# In[1402]:
-
-
-cured_ham['drug_class'].isin(ref_abx)
-
 
 # In[1403]:
 
-
+#print(cured_ham.info())
+#print(ref_sus_abx.describe())
 cured_ham['True_Positive'] = (cured_ham
-                              .apply(lambda x: x['drug_class'] in ref_abx, axis=1))
+                             .apply(lambda x: x['drug_class'] in ref_abx, axis = 1))
 
 
-# In[1404]:
-
-
-cured_ham['False_Positive'] = (cured_ham
-                              .apply(lambda x: x['drug_class'] in ref_sus_abx, axis=1))
+#cured_ham['False_Positive'] = (cured_ham
+ #                             .apply(lambda x: x['drug_class'] in ref_sus_abx, axis=1))
 
 
 # In[1405]:
 
 
-ref_abx_df['False_Negative'] = (ref_abx_df
-                              .apply(lambda x: x['abx_class'] not in cured_ham['drug_class'], axis=1))
-ref_abx_df['False_Negative'].unique()
+#ref_abx_df['False_Negative'] = (ref_abx_df.apply(lambda x: x['abx_class'] not in cured_ham['drug_class'], axis=1))
+#ref_abx_df['False_Negative'].unique()
 
 
 # In[1406]:
-
-
 cured_ham_dc = pd.DataFrame(cured_ham['drug_class'])
-
-
-# In[1407]:
-
 
 false_negatives = ref_abx_df[~(ref_abx_df['abx_class']
                              .isin(cured_ham_dc['drug_class']))]
 
 
-# In[1408]:
-
-
 abx_melted['abx_class'] = abx_melted['abx_class'].str.lower()
 false_negatives = cured_ham_dc[~(cured_ham_dc['drug_class']
                              .isin(ref_abx_df['abx_class']))]
-false_negatives.shape ## precursor to smol_sus; using smol_sus moving forward
+#false_negatives.shape ## precursor to smol_sus; using smol_sus moving forward
+
 ## sorry that the variables make less sense as I add things. this is directly related to my sleep quality 
 ## and how much I would like to be done with this project.
 
 
-# In[1409]:
-
-
-cured_ham.apply(get_posneg, axis=1).unique() ## faulty, do not use
-#cured_ham.to_csv("brookes_cured_ham.csv")
-## there is basically only one antibiotic class not reflected in our mock data :( )
-
-## read in brookes ham bc she did a lot of cleaning
-cured_ham.shape
-
-
 # This is where Brooke Talbot did some data cleaning in R. So I exported the above, and read in the results from her cleaning below. SHould probs rewrite what she did in python :,(
-# 
-# 
 # The following code block is originally written by Brooke in R, I have rewritten it in python so that we can use one script to do everything.
-# 
 
 # ## R to Python: Drug Class Cleaning
-
-# In[1410]:
-
 
 ## based on brooke r code
 #Summarizing values
@@ -565,8 +528,8 @@ cooked_ham['drugclass_new'] = cooked_ham['drugclass_new'].map(lambda x: x.replac
 ## those that fall into "other" drug class are left as the abx
 # we can keep triclosan bc some abx map to triclosan 
 
-## inspect that it worked
-cooked_ham['drugclass_new'].unique()
+## inspect that it worked in interactive
+#cooked_ham['drugclass_new'].unique()
 #cooked_ham.shape ## shorter than above. bc drops those with unclassified / unknown
 
 
@@ -582,9 +545,6 @@ def assign_true_pos(x):
     else:
         return "unknown"
 
-
-# # 
-
 # In[1413]:
 
 
@@ -594,10 +554,6 @@ combo_counts = cooked_ham.true_positive.value_counts()
 combo_name = "combo_counts_" + res_name + ".txt"
 combo_counts.to_csv(combo_name)
 
-
-# In[1414]:
-
-
 # first need to do some grouping by tool in cooked_ham
 grouped_ham = cooked_ham.groupby(['analysis_software_name'])
 ham_name = "cooked_ham_w_true_pos_" + res_name + ".csv"
@@ -605,17 +561,10 @@ cooked_ham.to_csv(ham_name)
 
 
 # Analysis below
-
-# In[1415]:
-
-
 grp_abx_results = grouped_ham['drugclass_new'].value_counts().to_frame()
 name_grp_results = "grouped_by_tool_drug_class" + res_name + ".csv"
 grp_abx_results.to_csv(name_grp_results)
-grp_abx_results
-
-
-# In[1416]:
+#grp_abx_results
 
 
 pos_count = grouped_ham['true_positive'].value_counts().to_frame().unstack(1, fill_value = 0)
@@ -653,7 +602,7 @@ negs = {}
 total_negatives = []
 for i in tool_list:
     intermediate = fetch_negatives(cooked_ham, i)
-    print(i, "\n",len(intermediate))
+   # print(i, "\n",len(intermediate))
   #  print(intermediate)
     ## these appear to be real true negatives - these Abx classes exist, and they are not in any of the hams
     name = str(i )
@@ -712,7 +661,7 @@ not_in_ham = ref_abx[~ref_abx.isin(cooked_ham['drugclass_new'])]
     
 #not_in_ham
 negs_in_ham = cooked_ham['drugclass_new'][~cooked_ham['drugclass_new'].isin(ref_abx)]
-negs_in_ham.unique()
+#negs_in_ham.unique()
 
 cooked_ham[cooked_ham['drugclass_new'].isin(neg_abx)] ## all false positives are nitro for oqxB/A gene
 
@@ -733,8 +682,8 @@ for n in total_negatives:
                 tot_falseneg_count += 1
                 #print('false_neg:', n)
     
-print("False negatives: ", tot_falseneg_count)
-print("True negatives: ", tot_trueneg_count)
+#print("False negatives: ", tot_falseneg_count)
+#print("True negatives: ", tot_trueneg_count)
 
 
 # # Thanksgiving Ham
@@ -750,10 +699,8 @@ print("True negatives: ", tot_trueneg_count)
 counts['sensitivity'] = counts[('true_positive', 'true_positive')] / (counts[('true_positive','true_positive')] + counts['false-neg'])
 ## precision = true positives / false_positives + true_positives
 counts['precision'] = counts[('true_positive', 'true_positive')] / ( counts['true_positive', 'false_positive'] + counts[('true_positive', 'true_positive')] )
-counts
-## specificity = true_negative / (true_negative + false_positive)
+## specificity = true_negative / (true_negative + false_positi
 counts['specificity'] = counts['true-neg'] / (counts['true-neg'] + counts[('true_positive', 'false_positive')])
-counts
 ## accuracy = (true_positive + true_negative) / (true_positive + false_positive + true_negative)
 counts['accuracy'] = (counts[('true_positive', 'true_positive')] + counts['true-neg']) / (counts[('true_positive', 'true_positive')] + counts['true_positive','false_positive'] + counts['true-neg'] )
 
@@ -772,10 +719,10 @@ counts['percent_unclassified'] = counts[('true_positive', 'unknown')] / (counts[
 # In[1423]:
 
 
-print("Conventional Thanksgiving Ham, ", this_run_res, " Resultion: ")
+print("Thanksgiving Ham, ", this_run_res, ": ")
 name = "thanksgiving_ham_" + res_name + ".csv"
 counts.to_csv(name)
-counts ## print out if interactive; does nothing if command line
+print(counts) ## print out if interactive; does nothing if command line
 
 
 # # Canned Ham
@@ -783,8 +730,6 @@ counts ## print out if interactive; does nothing if command line
 # 
 
 # In[1424]:
-
-
 cooked_ham = cooked_ham.assign(condensed_gene = cooked_ham.groupby('analysis_software_name')['input_gene_start'].shift(-1))
 
 def condense_results(df):
@@ -865,7 +810,7 @@ for tool in negs2:
             #print("true_negative: ", tool, n)
             tool_trueneg_count += 1
     
-        elif n in all_neg:
+        elif n in neg_abx: ## only things that are known to be negative
             #print("false negative: ", tool, n)
             tool_falseneg_count += 1
     
@@ -916,8 +861,8 @@ counts2['F1'] = 2 * ( (counts2['precision'] * counts2['recall']) / (counts2['pre
 
 counts2['percent_unclassified'] = counts2[('true_positive', 'unknown')] / (counts2[('true_positive', 'true_positive')] + counts2[('true_positive', 'false_positive')] + counts2[('true_positive', 'unknown')])
 
-print("Canned Ham Thanksgiving Table, ", this_run_res, " :")
-
+#print("Canned Ham Thanksgiving Table, ", this_run_res, " :")
+# no need to print this
 name2 = "canned_ham_" + res_name + ".csv"
 counts2.to_csv(name2)
 counts2 ## prints if interactive, ignored if not
