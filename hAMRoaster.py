@@ -4,41 +4,34 @@
 ## python 3.7.7, pandas 1.1.3, numpy 1.19.2
 #
 # In[1]:
-
-
 import numpy as np
 import pandas as pd
 import os
 import re
 import sys
 import argparse
-
 import warnings
-warnings.filterwarnings('ignore')
+warnings.filterwarnings('ignore') ## want to avoid print warnings with pandas merges that can be ignored
 
 parser = argparse.ArgumentParser()
 
 
 # In[2]:
-
-
 ##### user arguments
 parser.add_argument('--fargene', help='full path to fARGene output, if included')
-parser.add_argument('--shortbred', help='full path to shortBRED output \(tsv\), if included')
+parser.add_argument('--shortbred', help='full path to shortBRED output (tsv), if included')
 parser.add_argument('--shortbred_map', help='full path to shortBRED mapping file, if included and not using default')
 parser.add_argument('--abx_map', help='full path to Abx:drug class mapping file, if included')
-parser.add_argument('--AMR_key', help='full path to key with known AMR phenotypes, REQUIRED')
-parser.add_argument('--name', help='an identifier for this analysis run, REQUIRED')
-parser.add_argument('--ham_out', help='output file from hAMRonization \(tsv\), REQUIRED')
+parser.add_argument('--AMR_key', help='full path to key with known AMR phenotypes, REQUIRED', required = True)
+parser.add_argument('--name', help='an identifier for this analysis run, REQUIRED', required = True)
+parser.add_argument('--ham_out', help='output file from hAMRonization (tsv), REQUIRED', required = True)
 
 ## pull args
 args = parser.parse_args()
 
 
-# In[ ]:
 
-
-##Emily's To Do Once I Figure Out Where Files Go for Github
+##Emily's Point To Files for Github
 ## read in card ontologies as new key
 card_key = pd.read_csv("db_files/aro_categories_index.tsv", sep='\t')
 
@@ -48,8 +41,7 @@ if args.abx_map:
     abx_key = pd.read_csv(abx_key_name)
 else:
     abx_key = pd.read_csv("db_files/cleaned_drug_class_key.csv")
-    
-    
+
 # point to known data
 if args.AMR_key:
     mock_name = args.AMR_key
@@ -59,14 +51,13 @@ if args.AMR_key:
 raw_name = args.ham_out 
 raw_ham = pd.read_csv(raw_name, error_bad_lines=False, sep = "\t")
 
-
-# In[3]:
-
-
 ## get ham sum and add fargene and shortbred
 #resx = ["res_5x/", "res_50x/", "res_100x/"]
 this_run_res = args.name
 res_name =  args.name
+outdir = str(args.name) + "/"
+dir_cmd = "mkdir " + outdir
+os.system(dir_cmd)
 
 ## read in shortbred
 if args.shortbred:
@@ -76,16 +67,16 @@ if args.shortbred:
     shortbred = shortbred[shortbred['Hits'] > 0]
     shortbred['analysis_software_name'] = "shortbred"
     shortbred['gene_symbol'] = shortbred['Family'] ## merge "family" with gene symbol as closest match
-    
+
     ## give meaning to shortbred family 
     if args.shortbred_map:
         shortmap_name = args.shortbred_map
         shortmap = pd.csv_csv(shortmap_name, sep = "\t")
     else:
-        shortmap =pd.read_csv('../mock_2/shortbred_database/ShortBRED_ABR_Metadata.tab', sep = "\t")
+        shortmap =pd.read_csv('db_files/ShortBRED_ABR_Metadata.tab', sep = "\t")
     shortbred = shortbred.merge(shortmap, how = "left")
     shortbred['drug_class'] = shortbred['Merged.ID']
-    
+
     ## merge shortbred and rawham results
     raw_ham = raw_ham.append(shortbred,ignore_index = True)
 
@@ -129,10 +120,6 @@ if args.fargene:
 
 
 # This was initially a manual cleaning process, but after pouring through the results at one resolution (20x), here is the closest code version of the manual cleaning process. Basically, we want to default to CARD drug classes for accession number. Then, give all the genes with the same gene name the CARD drug class (overriding the HAM drug class). Fill in NAs with the HAM drug class.
-# 
-
-# In[1382]:
-
 
 ## read in above
 card_key['AMR Gene Family'] = card_key['AMR Gene Family'].str.lower()
@@ -146,18 +133,9 @@ card = card_key.melt(id_vars=['AMR Gene Family', 'Drug Class', 'Resistance Mecha
              value_name = "accession")
 
 card['drug_class_card'] = card['Drug Class']
-card.head()
-
-
-# In[1383]:
-
 
 ## merge raw ham and card on accession / reference_accession
 salted_ham = raw_ham.merge(card, left_on = "reference_accession", right_on = "accession", how = "left")
-
-
-# In[1384]:
-
 
 ## if gene_sumbol and drug class card NaN, filter out
 smol_gene = salted_ham[['gene_symbol','drug_class_card']].drop_duplicates().dropna(thresh=2)
@@ -179,10 +157,6 @@ def curedThatHam(x):
 
 # apply
 salted_ham['drug_class_card'] = salted_ham.apply(lambda x: curedThatHam(x),axis = 1) ## override OG col because check confirmed it was ok
-
-
-# In[1386]:
-
 
 salted_ham.analysis_software_name.unique()
 salted_ham['drug_class_ham'] = salted_ham['drug_class']
@@ -277,38 +251,18 @@ mock['Abx'] = (mock['Abx']
 
 mock = mock.explode('Abx_split') 
 mock['Abx_split'] = mock['Abx_split'].str.lower()
-mock.tail(3)
-
-#len(mock['Abx_split'].unique())
-
-
-# In[1394]:
-
 
 merged = mock.merge(abx_melted, left_on = 'Abx_split', right_on='abx', how='left')
 merged['abx_class'] = merged['abx_class'].str.lower()
-
-
-# In[1395]:
-
 
 merged['Abx_split'][merged['abx_class'].isna()].unique() ## need to go make data tidy for this to work sucessfully
 
 
 # Now we have clean data! Now we want to create true +/- and false +/- in `cured_ham`. 
-# 
-
-# In[1396]:
-
-
 ## first filter merged so it is only the resistant ones
 resistant_mock = merged[merged['classification']=="resistant"]
 len(resistant_mock['abx'].unique()) # number if resustant antibiotuics
-len(resistant_mock['abx_class'].unique())# number drug classes resistant
-
-
-# In[1397]:
-
+len(resistant_mock['abx_class'].unique()) # number drug classes resistant
 
 sus_mock = merged[merged['classification']=="susceptible"]
 boolean_list = ~sus_mock.Abx.isin(resistant_mock['Abx'])
@@ -316,19 +270,11 @@ filtered_sus = sus_mock[boolean_list]
 filtered_sus.abx.unique() ## only 6 antibiotics that are susceptible in the entire mock community
 filtered_sus.abx_class.unique()
 
-
-# In[1398]:
-
-
 ## filter filtered sus so that drug classes are unique to sus, not in resistant group
 ## prior had to filter by antibiotic tested bc only know at drug level, not drug class. 
 boolean2 = ~filtered_sus.abx_class.isin(resistant_mock['abx_class'])
 smol_sus = filtered_sus[boolean2]
 smol_sus.abx_class.unique() ## only 2 drug classes are KNOWN negatives in entire mock 
-
-
-# In[1399]:
-
 
 cured_ham = pd.DataFrame( cured_ham.explode('drug_class'))
 cured_ham['drug_class'] = (cured_ham['drug_class']
@@ -361,10 +307,6 @@ def get_posneg(row):
         return 'unknown'
     return
 
-
-
-# In[1403]:
-
 #print(cured_ham.info())
 #print(ref_sus_abx.describe())
 cured_ham['True_Positive'] = (cured_ham
@@ -374,15 +316,9 @@ cured_ham['True_Positive'] = (cured_ham
 #cured_ham['False_Positive'] = (cured_ham
  #                             .apply(lambda x: x['drug_class'] in ref_sus_abx, axis=1))
 
-
-# In[1405]:
-
-
 #ref_abx_df['False_Negative'] = (ref_abx_df.apply(lambda x: x['abx_class'] not in cured_ham['drug_class'], axis=1))
 #ref_abx_df['False_Negative'].unique()
 
-
-# In[1406]:
 cured_ham_dc = pd.DataFrame(cured_ham['drug_class'])
 
 false_negatives = ref_abx_df[~(ref_abx_df['abx_class']
@@ -487,9 +423,6 @@ cooked_ham = cured_ham.replace({"drugclass_new": new_d})
 
 # ## Back to the OG Python Script
 
-# In[1411]:
-
-
 #cooked_ham = cooked_ham.append(resfinder_results, ignore_index = True)
 cooked_ham['drugclass_new'] = cooked_ham['drugclass_new'].str.lower()
 
@@ -532,10 +465,6 @@ cooked_ham['drugclass_new'] = cooked_ham['drugclass_new'].map(lambda x: x.replac
 #cooked_ham['drugclass_new'].unique()
 #cooked_ham.shape ## shorter than above. bc drops those with unclassified / unknown
 
-
-# In[1412]:
-
-
 def assign_true_pos(x):
 
     if x in(ref_abx.unique()):
@@ -551,18 +480,18 @@ def assign_true_pos(x):
 cooked_ham['true_positive'] = cooked_ham['drugclass_new'].apply(lambda x: assign_true_pos(x)) # true is true pos, false is false neg
 
 combo_counts = cooked_ham.true_positive.value_counts()
-combo_name = "combo_counts_" + res_name + ".txt"
+combo_name = outdir + "combo_counts_" + res_name + ".txt"
 combo_counts.to_csv(combo_name)
 
 # first need to do some grouping by tool in cooked_ham
 grouped_ham = cooked_ham.groupby(['analysis_software_name'])
-ham_name = "cooked_ham_w_true_pos_" + res_name + ".csv"
+ham_name = outdir + "cooked_ham_w_true_pos_" + res_name + ".csv"
 cooked_ham.to_csv(ham_name)
 
 
 # Analysis below
 grp_abx_results = grouped_ham['drugclass_new'].value_counts().to_frame()
-name_grp_results = "grouped_by_tool_drug_class" + res_name + ".csv"
+name_grp_results = outdir + "grouped_by_tool_drug_class" + res_name + ".csv"
 grp_abx_results.to_csv(name_grp_results)
 #grp_abx_results
 
@@ -612,10 +541,6 @@ for i in tool_list:
         if n not in total_negatives and n not in cooked_ham['drugclass_new']:
             total_negatives.append(n)
 
-
-# In[1419]:
-
-
 all_pos_abx = resistant_mock['abx_class'].unique()
 neg_abx = smol_sus.abx_class.unique()
 neg_count = pd.DataFrame(columns=['tool', "false-neg", "true-neg"])
@@ -641,15 +566,8 @@ for tool in negs:
     print("True negatives from ", tool, ": ", tool_trueneg_count)
 
 
-# In[1420]:
-
-
 counts = pd.merge(pos_count, neg_count, right_on = "tool", how = "outer",left_index=True, right_index=False)  
-#counts ## this spits out an error, but we can ignore it 
-
-
-# In[1421]:
-
+#counts ## this spits out an error, but we can ignore it bc it's due to the double labels from pos counts
 
 ## what re counts if we merge all results
 pos_count_total = cooked_ham['true_positive'].value_counts().to_frame().unstack(1, fill_value = 0)
@@ -689,12 +607,7 @@ for n in total_negatives:
 # # Thanksgiving Ham
 # 
 # The following table is what all this code is for. 
-
-# In[1422]:
-
-
 ## sensitivity / specificity analysis
-
 ## sensitivity = true_positives / (true_positives + false_negatives)
 counts['sensitivity'] = counts[('true_positive', 'true_positive')] / (counts[('true_positive','true_positive')] + counts['false-neg'])
 ## precision = true positives / false_positives + true_positives
@@ -703,24 +616,19 @@ counts['precision'] = counts[('true_positive', 'true_positive')] / ( counts['tru
 counts['specificity'] = counts['true-neg'] / (counts['true-neg'] + counts[('true_positive', 'false_positive')])
 ## accuracy = (true_positive + true_negative) / (true_positive + false_positive + true_negative)
 counts['accuracy'] = (counts[('true_positive', 'true_positive')] + counts['true-neg']) / (counts[('true_positive', 'true_positive')] + counts['true_positive','false_positive'] + counts['true-neg'] )
-
 ## recall = true pos / (true pos  + false neg)
 counts['recall'] = counts[('true_positive', 'true_positive')] / (counts[('true_positive', 'false_positive')] + counts['false-neg'])
 counts['recall'] = pd.to_numeric(counts['recall'])
 # F1 
 ## 2 * (precision * recall) / (precision + recall)
-
 counts['F1'] = 2 * ( (counts['precision'] * counts['recall']) / (counts['precision'] + counts['recall']) )
 #except ZeroDivisionError:
 #    counts['F1'] = 0
 counts['percent_unclassified'] = counts[('true_positive', 'unknown')] / (counts[('true_positive', 'true_positive')] + counts[('true_positive', 'false_positive')] + counts[('true_positive', 'unknown')])
 
 
-# In[1423]:
-
-
 print("Thanksgiving Ham, ", this_run_res, ": ")
-name = "thanksgiving_ham_" + res_name + ".csv"
+name = outdir + "thanksgiving_ham_" + res_name + ".csv"
 counts.to_csv(name)
 print(counts) ## print out if interactive; does nothing if command line
 
@@ -751,37 +659,17 @@ def condense_results(df):
     return(message)
 
 
-# In[1425]:
-
-
 cooked_ham['condense_action'] = cooked_ham.apply(lambda x: condense_results(x), axis=1) ## does this need to be grouped by analysis software name ?
-
-
-# In[1426]:
-
-
-cooked_ham['condense_action'].describe()
+#cooked_ham['condense_action'].describe()
 ## looks like there are 1811 instances where AMR genes overlap. Lets remove these and see what happens. 
-
-
-# In[1374]:
-
 
 canned_ham = cooked_ham[cooked_ham['condense_action'] != "condense"]
 ## i am very proud of myself for this name
 ## its the little things in life that bring me smiles
 
-
-# In[1375]:
-
-
 ## positives
 grouped_can = canned_ham.groupby(['analysis_software_name'])
 pos_count2 = grouped_can['true_positive'].value_counts().to_frame().unstack(1, fill_value = 0)
-
-
-# In[1376]:
-
 
 ## add negatives
 negs2={}
@@ -792,9 +680,6 @@ for i in tool_list:
     name = str(i )
     # join whats not in ham and not in mock for true neg
     negs2[name] = intermediate
-
-
-# In[1377]:
 
 
 ## negative counts
@@ -820,56 +705,36 @@ for tool in negs2:
     #print("False negatives from ", tool, ": ", tool_falseneg_count)
     #print("Truenegatives from ", tool, ": ", tool_trueneg_count)
 
-
-# In[1313]:
-
-
 ## merge this all together
 counts2 = pd.merge(pos_count2, neg_count2, right_on = "tool", how = "outer",left_index=True, right_index=False)  
 #counts2 ## this spits out an error, but we can ignore it 
 
-
-# In[1314]:
-
-
 ## sensitivity / specificity analysis
-
 ## sensitivity = true_positives / (true_positives + false_negatives)
 counts2['sensitivity'] = counts2[('true_positive','true_positive')] / (counts2[('true_positive','true_positive')] + counts2['false-neg'])
 ## precision
 counts2['precision'] = counts2[('true_positive','true_positive')] / ( counts2['true_positive','false_positive'] + counts2[('true_positive','true_positive')] )
-
-
 ## specificity = true_negative / (true_negative + false_positive)
 counts2['specificity'] = counts2['true-neg'] / (counts2['true-neg'] + counts2[('true_positive', 'false_positive')])
-
 ## if we do true neg (aka if it is not zero:)
 ## accuracy = (true_positive + true_negative) / (true_positive + false_positive + true_negative)
 counts2['accuracy'] = (counts2[('true_positive', 'true_positive')] + counts2['true-neg']) / (counts2[('true_positive','true_positive')] + counts['true_positive','false_positive'] + counts['true-neg'] )
-
 ## recall
 ## true pos / (true pos  + false neg)
 counts2['recall'] = counts2[('true_positive','true_positive')] / (counts2[('true_positive', 'true_positive')] + counts2['false-neg'])
-
 counts2['recall'] = pd.to_numeric(counts2['recall'])
 # F1 
 ## 2 * (precision * recall) / (precision + recall)
-#
 counts2['F1'] = 2 * ( (counts2['precision'] * counts2['recall']) / (counts2['precision'] + counts2['recall']) )
 #except ZeroDivisionError:
 #    counts['F1'] = 0
-
 counts2['percent_unclassified'] = counts2[('true_positive', 'unknown')] / (counts2[('true_positive', 'true_positive')] + counts2[('true_positive', 'false_positive')] + counts2[('true_positive', 'unknown')])
 
 #print("Canned Ham Thanksgiving Table, ", this_run_res, " :")
 # no need to print this
-name2 = "canned_ham_" + res_name + ".csv"
+name2 = outdir + "canned_ham_" + res_name + ".csv"
 counts2.to_csv(name2)
 counts2 ## prints if interactive, ignored if not
-
-
-# In[5]:
-
 
 ## combine results of all tools
 #count specificity 
@@ -906,5 +771,5 @@ F1 = 2 * ( precision * recall / (precision + recall) )
 percent_unclassified = tot_unknown / (tot_true_pos + tot_false_pos + tot_unknown)
 
 print("combo stats (compiled outputs of all tools): ", "\n", "sensitivity: ", sensitivity, "\n specificity",specificity, "\n precision", precision, "\n accuracy", accuracy, "\n recall", recall, "\n F1 ", F1) 
-print(" percent unknown ", percent_unclassified)
+print(" percent unknown: ", percent_unclassified)
 
