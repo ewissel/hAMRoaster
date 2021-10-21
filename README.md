@@ -24,7 +24,7 @@ hAMRoaster has several required and optional commands. At a minimum, users **mus
 
 * `--AMR_key` : the full path to the file of known AMR phenotypes; the file is expected to be a tsv in the following format: taxa_name, antibiotic tested, result of antibiotic resting, and testing standard. This matches the output for the [NCBI BioSample AntiBioGram](https://www.ncbi.nlm.nih.gov/biosample/?term=antibiogram%5bfilter%5d). An example file is in `study_data/mock_2_key.csv`.
 
-###### Optional Arguments
+##### Optional Arguments
 
 * `--abx_map` : While hAMRoaster comes with it's own classifications for antibiotics and their drug class, users can provide their own classification scheme. This expects the drug class to in the first column, and the antibiotics or drugs that fit into that drug class in the next two columns. hAMRoaster's default classification is located in `db_files/cleaned_drug_class_key.csv`. 
 
