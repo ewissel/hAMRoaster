@@ -619,9 +619,9 @@ counts['accuracy'] = (counts[('true_positive', 'true_positive')] + counts['true-
 ## recall = true pos / (true pos  + false neg)
 counts['recall'] = counts[('true_positive', 'true_positive')] / (counts[('true_positive', 'false_positive')] + counts['false-neg'])
 counts['recall'] = pd.to_numeric(counts['recall'])
-# F1 
+# F1 currently faulty (returning values outside expected range) so removing from the pipeline
 ## 2 * (precision * recall) / (precision + recall)
-counts['F1'] = 2 * ( (counts['precision'] * counts['recall']) / (counts['precision'] + counts['recall']) )
+#counts['F1'] = 2 * ( (counts['precision'] * counts['recall']) / (counts['precision'] + counts['recall']) )
 #except ZeroDivisionError:
 #    counts['F1'] = 0
 counts['percent_unclassified'] = counts[('true_positive', 'unknown')] / (counts[('true_positive', 'true_positive')] + counts[('true_positive', 'false_positive')] + counts[('true_positive', 'unknown')])
@@ -725,7 +725,7 @@ counts2['recall'] = counts2[('true_positive','true_positive')] / (counts2[('true
 counts2['recall'] = pd.to_numeric(counts2['recall'])
 # F1 
 ## 2 * (precision * recall) / (precision + recall)
-counts2['F1'] = 2 * ( (counts2['precision'] * counts2['recall']) / (counts2['precision'] + counts2['recall']) )
+#counts2['F1'] = 2 * ( (counts2['precision'] * counts2['recall']) / (counts2['precision'] + counts2['recall']) )
 #except ZeroDivisionError:
 #    counts['F1'] = 0
 counts2['percent_unclassified'] = counts2[('true_positive', 'unknown')] / (counts2[('true_positive', 'true_positive')] + counts2[('true_positive', 'false_positive')] + counts2[('true_positive', 'unknown')])
@@ -765,7 +765,7 @@ recall = tot_true_pos / (tot_true_pos + tot_false_neg)
 # F1 
 ## 2 * (precision * recall) / (precision + recall)
 #
-F1 = 2 * ( precision * recall / (precision + recall) )
+#F1 = 2 * ( precision * recall / (precision + recall) )
 #except ZeroDivisionError:
 #    counts['F1'] = 0
 percent_unclassified = tot_unknown / (tot_true_pos + tot_false_pos + tot_unknown)
