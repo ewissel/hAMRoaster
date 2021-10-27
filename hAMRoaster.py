@@ -18,10 +18,13 @@ parser = argparse.ArgumentParser()
 
 # In[2]:
 ##### user arguments
+parser.add_argument('--version', action='version', version='1.0 (initial release)')
+
 parser.add_argument('--fargene', help='full path to fARGene output, if included')
 parser.add_argument('--shortbred', help='full path to shortBRED output (tsv), if included')
 parser.add_argument('--shortbred_map', help='full path to shortBRED mapping file, if included and not using default')
 parser.add_argument('--abx_map', help='full path to Abx:drug class mapping file, if included')
+parser.add_argument('--db_files', help='Path to ontology index files', default= "./")
 parser.add_argument('--AMR_key', help='full path to key with known AMR phenotypes, REQUIRED', required = True)
 parser.add_argument('--name', help='an identifier for this analysis run, REQUIRED', required = True)
 parser.add_argument('--ham_out', help='output file from hAMRonization (tsv), REQUIRED', required = True)
@@ -33,14 +36,14 @@ args = parser.parse_args()
 
 ##Emily's Point To Files for Github
 ## read in card ontologies as new key
-card_key = pd.read_csv("db_files/aro_categories_index.tsv", sep='\t')
+card_key = pd.read_csv(f"{args.db_files}/aro_categories_index.tsv", sep='\t')
 
 ## read in drug class key data
 if args.abx_map:
     abx_key_name = args.AMR_key
     abx_key = pd.read_csv(abx_key_name)
 else:
-    abx_key = pd.read_csv("db_files/cleaned_drug_class_key.csv")
+    abx_key = pd.read_csv(f"{args.db_files}/cleaned_drug_class_key.csv")
 
 # point to known data
 if args.AMR_key:
@@ -73,22 +76,17 @@ if args.shortbred:
         shortmap_name = args.shortbred_map
         shortmap = pd.csv_csv(shortmap_name, sep = "\t")
     else:
-        shortmap =pd.read_csv('db_files/ShortBRED_ABR_Metadata.tab', sep = "\t")
+        shortmap =pd.read_csv(f'{args.db_files}/ShortBRED_ABR_Metadata.tab', sep = "\t")
     shortbred = shortbred.merge(shortmap, how = "left")
     shortbred['drug_class'] = shortbred['Merged.ID']
 
     ## merge shortbred and rawham results
     raw_ham = raw_ham.append(shortbred,ignore_index = True)
 
-
-# In[1381]:
-
-
 ### integrate fargene results
 # note there there is a discrepancy in that the results folder has mixed caps and lower case
 # so run "find . -depth | xargs -n 1 rename 's/(.*)\/([^\/]*)/$1\/\L$2/' {} \;" in the command line to fix it
 beta_lactam_models = ['class_a', 'class_b_1_2', 'class_b_3', 'class_c', 'class_d_1', 'class_d_2' ]
-
 subdirs = ['class_a', 'class_b_1_2', 'class_b_3', 'class_c', 'class_d_1', 'class_d_2', 'qnr', 'tet_efflux', 'tet_rpg', 'tet_enzyme']
 
 if args.fargene:
@@ -163,10 +161,6 @@ salted_ham['drug_class_ham'] = salted_ham['drug_class']
 ## There are 9 tools in out salted ham. This is correct. We can now covert salted ham to cured ham
 cured_ham = pd.DataFrame(salted_ham)
 
-
-# In[1387]:
-
-
 ## import the Resfinder results 
 ##### this code block is outdated because I did this with the hamronizer tool; leaving for future ref tho
 ## had to run on web bc the docker version was broke AF
@@ -175,10 +169,6 @@ cured_ham = pd.DataFrame(salted_ham)
 #resfinder_results['analysis_software_name'] = "resfinder4_online"
 
 #cured_ham = cured_ham.append(resfinder_results, ignore_index= True) 
-
-
-# In[1388]:
-
 
 ### for each row
 ### if drug_class_card is not empty take value
@@ -203,26 +193,15 @@ def simplify_drug_class(dat):
         
     return dat
 
-
-# In[1389]:
-
-
 import re
 cured_ham = cured_ham.apply(lambda x: simplify_drug_class(x), axis = 1)
 cured_ham['drug_class'] = cured_ham['drug_class'].str.lower()
 cured_ham['drug_class'] = cured_ham['drug_class'].apply(lambda x: (re.split(r";|, |: | and ", x )))
 
-
-# In[4]:
-
-
 ####### has the generic abx names to drug class
 abx_key['abx_class'] = (abx_key['drug_class']
      .apply(lambda x: x if type(x)== str else "")
      .apply(lambda x: ''.join(e for e in x if e.isalnum())))
-
-
-# In[1391]:
 
 
 abx_melted = abx_key.melt(value_vars=['Generic name', 'Brand names'], id_vars=['abx_class'], var_name = "abx_type", value_name = "abx")
@@ -235,13 +214,6 @@ abx_melted = abx_key.melt(value_vars=['Generic name', 'Brand names'], id_vars=['
 
 abx_melted['abx'] = abx_melted['abx'].str.lower().str.strip()
 #abx_melted[abx_melted['abx']=='tazobactam']
-
-
-# ## Look here! change the paths around here.
-
-# In[1393]:
-
-
 ## next combine the drug clas to the antibiotic in the mock community
 
 mock['Abx_split'] = mock['Abx'].apply(lambda x: x.split('-') if "-" in x else x)
@@ -474,11 +446,7 @@ def assign_true_pos(x):
     else:
         return "unknown"
 
-# In[1413]:
-
-
 cooked_ham['true_positive'] = cooked_ham['drugclass_new'].apply(lambda x: assign_true_pos(x)) # true is true pos, false is false neg
-
 combo_counts = cooked_ham.true_positive.value_counts()
 combo_name = outdir + "combo_counts_" + res_name + ".txt"
 combo_counts.to_csv(combo_name)
@@ -499,10 +467,6 @@ grp_abx_results.to_csv(name_grp_results)
 pos_count = grouped_ham['true_positive'].value_counts().to_frame().unstack(1, fill_value = 0)
 #pos_count.columns = ['analysis_software_name', 'positive_classification', 'count']
 
-
-# In[1427]:
-
-
 ### get false neg dataset
 abx_melted['abx_class'] = abx_melted['abx_class'].str.lower() # copied above but def need here
 ## drop other from abx_meltered because we excluded unknowns
@@ -513,10 +477,6 @@ not_in_mock = abx_melted[~abx_melted['abx_class'].isin(ref_abx)]
 not_in_mock['abx_class'].unique()
 mock_negatives = not_in_mock['abx_class'].unique() # list of what would be true negative values
 ## use smol_sus for only what is KNOWN as negative
-
-
-# In[1418]:
-
 
 def fetch_negatives(df, tool):
     df = df[df.analysis_software_name == tool]
