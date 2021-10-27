@@ -24,7 +24,7 @@ parser.add_argument('--fargene', help='full path to fARGene output, if included'
 parser.add_argument('--shortbred', help='full path to shortBRED output (tsv), if included')
 parser.add_argument('--shortbred_map', help='full path to shortBRED mapping file, if included and not using default')
 parser.add_argument('--abx_map', help='full path to Abx:drug class mapping file, if included')
-parser.add_argument('--db_files', help='Path to ontology index files', default= "./")
+parser.add_argument('--db_files', help='Path to ontology index files, exclude "/" on end of path ', default= "./db_files")
 parser.add_argument('--AMR_key', help='full path to key with known AMR phenotypes, REQUIRED', required = True)
 parser.add_argument('--name', help='an identifier for this analysis run, REQUIRED', required = True)
 parser.add_argument('--ham_out', help='output file from hAMRonization (tsv), REQUIRED', required = True)
