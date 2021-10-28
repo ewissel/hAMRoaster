@@ -730,6 +730,6 @@ recall = tot_true_pos / (tot_true_pos + tot_false_neg)
 #    counts['F1'] = 0
 percent_unclassified = tot_unknown / (tot_true_pos + tot_false_pos + tot_unknown)
 
-print("combo stats (compiled outputs of all tools): ", "\n", "sensitivity: ", sensitivity, "\n specificity",specificity, "\n precision", precision, "\n accuracy", accuracy, "\n recall", recall, "\n F1 ", F1) 
+print("combo stats (compiled outputs of all tools): ", "\n", "sensitivity: ", sensitivity, "\n specificity",specificity, "\n precision", precision, "\n accuracy", accuracy, "\n recall", recall) 
 print(" percent unknown: ", percent_unclassified)
 

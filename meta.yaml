@@ -1,0 +1,24 @@
+{% set version = "1.0" %}
+{% set name = "hAMRoaster" %}
+
+package:
+    name: {{ name|lower }}
+    version: {{ version }}
+
+source:
+    url: https://github.com/ewissel/{{ name }}/archive/v{{ version }}.tar.gz
+    sha256: 71f6909d5eddc58c2b1dbe75fa26a004bd9536226df7cd788240a44f88e8b1b2
+
+requirements:
+    run:
+        - python
+        - pandas
+        - numpy
+
+test:
+    commands:
+        - hAMRoaster -h
+
+about:
+    home: https://github.com/ewissel/{{ name }}
+    license: CC0
