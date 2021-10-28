@@ -11,7 +11,7 @@ To install hAMRoaster, run `conda install -c ewissel hamroaster` .
 
 #### Test your install
 
-`hAMRoaster.py -h` 
+`hAMRoaster -h` 
 *(notice the caps)*
 
 ## hAMRoaster Commands
