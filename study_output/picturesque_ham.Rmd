@@ -1,0 +1,516 @@
+---
+title: "picturesque_ham"
+author: "Emily Wissel"
+date: "9/7/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(RColorBrewer)
+library(colorblindr) ## install the below for colorspace2
+#remotes::install_github("wilkelab/cowplot")
+#install.packages("colorspace", repos = "http://R-Forge.R-project.org")
+#remotes::install_github("clauswilke/colorblindr")
+#install.packages("viridis")
+library(viridis)
+```
+
+## HAM HAM HAM HAM
+
+first we read in our data
+```{r read in the ham}
+#ham <- read.csv("thanksgiving_and_canned_ham-tidy_results.csv")
+ham <- read.csv("thanksgiving_and_canned_ham-tidy_results_known_negs_only.csv")
+head(ham)
+```
+
+Clean up for plotting.
+```{r clean up clean up everybody clean up}
+#Turn your 'treatment' column into a character vector
+ham$Resolution <- as.character(ham$Resolution)
+#Then turn it back into a factor with the levels in the correct order
+ham$Resolution <- factor(ham$Resolution, levels=unique(ham$Resolution))
+#order
+ham$Resolution <- factor(ham$Resolution, levels=c("res_5x", "res_20x", "res_50x", "res_100x"))
+ham$resolution_quant <- recode(ham$Resolution, "res_5x" = 5, "res_20x" = 20, "res_50x" = 50, "res_100x" = 100)
+
+###########
+## remove 20x
+ham <- ham %>% filter(Resolution != "res_20x")
+
+###########
+# color pallette
+palette_OkabeIto <- c( "#999999","#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", "#000000")
+
+########
+# clean up resfinder names
+table(ham$tool)
+ham$tool <- recode(ham$tool, "resfinder 4" = "ResFinder", "resfinder4_online" = "ResFinder")
+# remove the erroneous resfinder docker run
+ham <- ham %>% filter(tool != "ResFinder_docker")
+
+## split
+thanksgiving_ham <- ham %>% filter(result_type == "thanksgiving_ham")
+canned_ham <- ham %>% filter(result_type == "canned_ham", tool != "srax", tool != "fARGene")
+```
+
+
+Now let's make it picturesque, like the name of this script.
+
+```{r PLOT THAT HAM}
+
+
+thanksgiving_ham %>%
+  ggplot(aes(x = resolution_quant, y = sensitivity, color = tool)) +
+  geom_point(aes(size = 10, alpha = 0.6))+
+  geom_line(aes(group = tool)) +
+  scale_color_manual(values = palette_OkabeIto) +
+  theme_minimal()+
+  labs(title = "Sensitivity across All Resolutions",
+        x = "Average Coverage", y = "Sensitivity") +
+  scale_alpha(guide = 'none') +
+  scale_size(guide = 'none') +
+  theme(text = element_text(size = 20))  +
+  scale_x_continuous(breaks= c(5,50,100))      + expand_limits(y = c(0, 1))  
+ggsave("thanksgiving_ham_sensitivity.png")
+```
+```{r spec}
+
+##############################
+thanksgiving_ham %>%
+  ggplot(aes(x = resolution_quant, y =specificity, color = tool)) +
+  geom_point(aes(size = 10, alpha = 0.4))+
+  geom_line(aes(group = tool, alpha = 0.5)) +
+  scale_color_manual(values = palette_OkabeIto) +
+  theme_minimal()+
+  labs(title = "Specificity across All Resolutions",
+        x = "Average Coverage", y = "Specificity") +
+  scale_alpha(guide = 'none') +
+  scale_size(guide = 'none') +
+  theme(text = element_text(size = 20))   +geom_jitter(width = 3,aes(size = 50)) +
+  scale_x_continuous(breaks= c(5,50,100)) + expand_limits(y = c(0, 1))
+
+ggsave("thanksgiving_ham_specificity.png")
+  
+  
+```
+
+```{r precision}
+ham %>%
+  ggplot(aes(x = resolution_quant, y = precision, color = tool)) +
+  geom_point(aes(size = 10, alpha = 0.6))+
+  geom_line(aes(group = tool)) +
+  scale_color_manual(values = palette_OkabeIto) +
+  facet_wrap(~result_type)+ 
+  theme_minimal()+
+  labs(title = "Precision across Resolutions",
+        x = "Average Coverage", y = "Precision")
+
+##############################
+thanksgiving_ham %>%
+  ggplot(aes(x = resolution_quant, y =precision, color = tool)) +
+  geom_point(aes(size = 10, alpha = 0.6))+
+  geom_line(aes(group = tool )) +
+  scale_color_manual(values = palette_OkabeIto) +
+  theme_minimal()+
+  labs(title = "Precision across All Resolutions",
+        x = "Average Coverage", y = "precision") +
+  scale_alpha(guide = 'none') +
+  scale_size(guide = 'none') +
+  theme(text = element_text(size = 20))   +geom_jitter(width = 5,aes(size = 50)) +
+  scale_x_continuous(breaks= c(5,50,100)) + expand_limits(y = c(0, 1))
+
+ggsave("thanksgiving_ham_precision.png")
+  
+```
+
+```{r accuracy}
+ham %>%
+  ggplot(aes(x = resolution_quant, y = accuracy, color = tool)) +
+  geom_point(aes(size = 10, alpha = 0.6))+
+  geom_line(aes(group = tool)) +
+  scale_color_manual(values = palette_OkabeIto) +
+  facet_wrap(~result_type)+ 
+  theme_minimal()+
+  labs(title = "Accuracy across Resolutions",
+        x = "Average Coverage", y = "Accuracy")
+
+##############################
+thanksgiving_ham %>%
+  ggplot(aes(x = resolution_quant, y =accuracy, color = tool)) +
+  geom_point(aes(size = 10, alpha = 0.6))+
+  geom_line(aes(group = tool )) +
+  scale_color_manual(values = palette_OkabeIto) +
+  theme_minimal()+
+  labs(title = "Accuracy across All Resolutions",
+        x = "Average Coverage", y = "Accuracy") +
+  scale_alpha(guide = 'none') +
+  scale_size(guide = 'none') +
+  theme(text = element_text(size = 20))   +geom_jitter(width = 5,aes(size = 50)) +
+  scale_x_continuous(breaks= c(5,50,100)) + expand_limits(y = c(0, 1))
+
+ggsave("thanksgiving_ham_accuracy.png")
+```
+
+
+```{r percent unknown}
+##############################
+thanksgiving_ham %>%
+  ggplot(aes(x = resolution_quant, y =perc_unclassified, color = tool)) +
+  geom_point(aes(size = 12, alpha = 0.9))+
+  geom_line(aes(group = tool )) +
+  scale_color_manual(values = palette_OkabeIto) +
+  theme_minimal()+
+  labs(title = "Percent Unclassified ",
+        x = "Average Coverage", y = "% ") +
+  scale_alpha(guide = 'none') +
+  scale_size(guide = 'none') +
+  theme(text = element_text(size = 20)) + # +geom_jitter(width = 5,aes(size = 50)) +
+  scale_x_continuous(breaks= c(5,50,100)) + expand_limits(y = c(0, 1)) +
+  geom_hline(aes(yintercept=0.20), linetype="dashed",size = 3, show.legend = FALSE) 
+
+ggsave("thanksgiving_ham_perc_unclassified.png")
+```
+
+
+
+```{r canned graphs}
+canned_ham %>%
+  ggplot(aes(x = resolution_quant, y = sensitivity, color = tool)) +
+  geom_point(aes(size = 10, alpha = 0.6))+
+  geom_line(aes(group = tool)) +
+  scale_color_manual(values = palette_OkabeIto) +
+  theme_minimal()+
+  labs(title = "Sensitivity across All Resolutions, Condensed",
+        x = "Average Coverage", y = "Sensitivity") +
+  scale_alpha(guide = 'none') +
+  scale_size(guide = 'none') +
+  theme(text = element_text(size = 20))  +
+  scale_x_continuous(breaks= c(5,50,100))+
+  expand_limits(y = c(0, 1))  
+ggsave("canned_ham_sensitivity.png")
+
+
+canned_ham %>%
+  ggplot(aes(x = resolution_quant, y =perc_unclassified, color = tool)) +
+  geom_point(aes(size = 12, alpha = 0.9))+
+  geom_line(aes(group = tool )) +
+  scale_color_manual(values = palette_OkabeIto) +
+  theme_minimal()+
+  labs(title = "Percent Unclassified ",
+        x = "Average Coverage", y = "% ") +
+  scale_alpha(guide = 'none') +
+  scale_size(guide = 'none') +
+  theme(text = element_text(size = 20)) + # +geom_jitter(width = 5,aes(size = 50)) +
+  scale_x_continuous(breaks= c(5,50,100)) + expand_limits(y = c(0, 1)) +
+  geom_hline(aes(yintercept=0.20), linetype="dashed",size = 3, show.legend = FALSE) 
+
+ggsave("canned_ham_perc_unclassified.png")
+```
+
+# by resolution results
+
+```{r read in data}
+dat5 <- read.csv("cooked_ham_w_true_pos_res5x.csv")
+head(dat5) ## use drugclass_new and true_positive and ananlysis_software_name
+
+dat50 <- read.csv("cooked_ham_w_true_pos_res50x.csv")
+dat100 <- read.csv("cooked_ham_w_true_pos_res100x.csv")
+## clean daz sheet 
+dat5 <-dat5 %>% filter(drugclass_new != "aph3lb")
+dat50 <- dat50 %>% filter(drugclass_new != "aph3lb")
+dat100 <- dat100 %>% filter(drugclass_new != "aph3lb")
+```
+
+heatmap
+
+```{r}
+dat5 %>%
+  ggplot(aes(y = analysis_software_name, x = drugclass_new, fill = true_positive))+
+  geom_tile(color = 'black') + 
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle = 45, hjust =1))+
+  coord_equal() +
+  labs(y = "AMR Tool", x = "Drug Class", title = "Detect AMR Drug Classes, 5x Coverage") +
+  scale_fill_viridis(discrete = TRUE) 
+
+ggsave("detected_amr_drug_class_per_tools_5x.png")
+
+##########################################
+dat50 %>%
+  ggplot(aes(y = analysis_software_name, x = drugclass_new, fill = true_positive))+
+  geom_tile(color = 'black') + 
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle = 45, hjust =1))+
+  coord_equal() +
+  labs(y = "AMR Tool", x = "Drug Class", title = "Detect AMR Drug Classes, 50x Coverage") +
+  scale_fill_viridis(discrete = TRUE) 
+
+ggsave("detected_amr_drug_class_per_tools_50x.png")
+
+#########################################
+dat100 %>%
+  ggplot(aes(y = analysis_software_name, x = drugclass_new, fill = true_positive))+
+  geom_tile(color = 'black') + 
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle = 45, hjust =1),
+      axis.text=element_text(size=12),
+      axis.title=element_text(size=14,face="bold"))+
+  coord_equal() +
+  labs(y = "AMR Tool", x = "Drug Class", title = "Detect AMR Drug Classes, 100x Coverage") +
+  scale_fill_viridis(discrete = TRUE) +  
+  guides(fill=guide_legend(title="Classification"))
+
+ggsave("detected_amr_drug_class_per_tools_100x.png",  width = 15, height = 8)
+unique(dat100$drugclass_new)
+```
+################# 
+# below from brooke
+Examinining the Genes detected by each tool
+##Genes Present for all tools except shortBRED
+```{r}
+## all code in this chunk written by Brooke Talbot or based on code written by Brooke 
+#Looking at Specific Genes
+library(irr) #for Fleiss' Kappa analysis
+
+genes_dedup <- dat5 %>% select(X, gene_symbol, analysis_software_name) %>% unique()
+genes_dedup$gene_symbol <- toupper(genes_dedup$gene_symbol)
+
+
+Gene <- genes_dedup
+
+Gene$genesym2 <- gsub("\\STAPHYLOCOCCUS_AUREUS_|_WITH_MUTATION_CONFERRING_RESISTANCE_TO_FOSFOMYCI|STAPHYLOCOCCUS_AUREUS_|_WITH_MUTATION_CONFERRING_RESISTANCE_TO_DAPTOMYCIN|_CONFERRING_RESISTANCE_TO_DAPTOMYCIN|_MUTANTS_CONFERRING_RESISTANCE_TO_DAPTOMYCIN|_CONFERRING_RESISTANCE_TO_AMINOCOUMARIN|_CONFERRING_RESISTANCE_TO_FLUOROQUINOLONE|_WITH_MUTATION_CONFERRING_RESISTANCE_TO_FOSFOMYCIN|_WITH_MUTATION_CONFERRING_RESISTANCE_TO_BETA_LACTAM_ANTIBIOTICS|_WITH_MUTATION_CONFERRING_RESISTANCE_TO_LYSOCIN|_WITH_MUTATION_CONFERRING_RESISTANCE_TO_MUPIROCIN|_CONFERRING_RESISTANCE_TO_AMINOCOUMARIN|_CONFERRING_RESISTANCE_TO_FLUOROQUINOLONES|_WITH_MUTATION_CONFERRING_RESISTANCE_TO_FOSFOMYCIN|_WITH_MUTATION_CONFERRING_RESISTANCE_TO_FUSIDIC_ACID|_WITH_MUTATION_CONFERRING_RESISTANCE_TO_LINEZOLID|_WITH_MUTATION_CONFERRING_ANTIBIOTIC_RESISTANCE|_CONFERRING_RESISTANCE_TO_COLISTIN|SALMONELLA_SEROVARS_|SALMONELLA_ENTERICA_|PSEUDOMONAS_MUTANT_|PSEUDOMONAS_AERUGINOSA_|_WITH_MUTATION_CONFERRING_RESISTANCE_TO_IMIPENEM|_CONFERRING_RESISTANCE_TO_BETA_LACTAM|NEISSERIA_MENINGITITIS_|NEISSERIA_GONORRHOEAE_|_MUTATION_CONFERRING_RESISTANCE_TO_SPECTINOMYCIN|_GENE_CONFERRING_RESISTANCE_TO_BETA_LACTAM|NEISSERIA_GONORRHOEAE_|NEISSERIA_GONORRHOEA_|KLEBSIELLA_PNEUMONIAE_|_MUTANTS|_WITH_MUTATION_CONFERRING_MULTIDRUG_ANTIBIOTIC_RESISTANCE|_WITH_MUTATION_CONFERRING_RESISTANCE_TO_FOSFOMYCIN|ESCHERICHIA_COLI_|_MUTANTS_CONFERRING_RESISTANCE_TO_RIFAMPICIN|_MUTATIONS_CONFERRING_RESISTANCE_TO_NITROFURANTOIN|_MUTANT_CONFERRING_ANTIBIOTIC_RESISTANCE|_CONFERRING_RESISTANCE_TO_AMINOCOUMARIN|_WITH_MUTATION_CONFERRING_RESISTANCE_TO_TRICLOSAN|_WITH_MUTATION_CONFERRING_RESISTANCE_TO_SULFONAMIDES|_MUTATIONS_CONFERRING_RESISTANCE_TO_ISONIAZID_AND_TRICLOSAN|_MUTANTS_CONFERRING_RESISTANCE_TO_ENACYLOXIN_IIA|_WITH_MUTATION_CONFERRING_RESISTANCE_TO_ERYTHROMYCIN_AND_TELITHROMYCIN|_MUTATION_CONFERRING_RESISTANCE_TO_SPECTINOMYCIN|STAPHYLOCOCCUS AUREUS |PSEUDOMONAS AERUGINOSA |KLEBSIELLA PNEUMONIAE |ESCHERICHIA COLI |BRUCELLA SUIS |TRUNCATED_PUTATIVE_RESPONSE_REGULATOR_|TRANSCRIPTIONAL_REGULATORY_PROTEIN_CPXR_|SERRATIA_MARCESCENS_|KASUGAMYCIN_RESISTANCE_PROTEIN_|DNA-BINDING_PROTEIN_|BACTERIAL_REGULATORY_PROTEIN_|STAPHYLOCOCCYS_AUREUS_|_MUTATIONS|KLEBSIELLA_MUTANT_|_CONFERRING_ANTIBIOTIC_RESISTANCE_TO_COLISTIN|_MUTATIONS_CONFERRING_RESISTANCE_TO_TRICLOSAN|_BETA-LACTAMASE| BETA-LACTAMASE|ENTEROBACTER_CLOACAE_|_WITH_MUTATION_ANTIBIOTICS|-QACA_FAMILY_MAJOR_FACILITATOR_TRANSPORTER", "", Gene$gene_symbol)
+
+Gene <- Gene %>% mutate(genesym2 = case_when(genesym2 %in% c("TET(B)", "TETB") ~ "TETB", genesym2 %in% c("TET(A)", "TETA") ~ "TETA", genesym2 %in% c("NDM", "NDM-1", "METALLO-BETA-LACTAMASE") ~ "NDM", genesym2 %in% c("PC1_(BLAZ)", "PC1 (BLAZ)") ~ "BLAZ", genesym2 %in% c("GYRA_AND_PARC") ~ "PARC", genesym2 %in% c("PER", "PER-1", "PER1") ~ "PER1", genesym2 %in% c("16S_RRNA_(RRSH)", "16S_RRNA") ~ "16S_RRNA", genesym2 %in% c("APH(3')-IIIA", "APH(3')-III") ~ "APH(3')-IIIA", genesym2 %in% c("BLE-MBL", "BRP(MBL)") ~ "BLE-MBL", genesym2 %in% c("SAT-4", "SAT4") ~ "SAT4", genesym2 %in% c("BCR-1","BICYCLOMYCIN-MULTIDRUG_EFFLUX_PROTEIN_BCR") ~ "BCR-1", genesym2 %in% c("BLAI", "BLAI_OF_Z") ~ "BLAI", genesym2 %in% c("TEM", "TEM-1", "BLATEM", "BLATEM-1") ~ "TEM-1", genesym2 %in% c("ERMB", "ERM(B)") ~ "ERMB", genesym2 %in% c("MPHA", "MPH(A)") ~ "ERMB" ,  TRUE ~ genesym2))
+
+Gene_subset <- Gene %>% filter(!(analysis_software_name %in% c("fARGene", "shortBRED")))
+
+
+Gene2 <- Gene_subset %>% select(analysis_software_name, genesym2) %>%
+                      group_by(analysis_software_name, genesym2) %>%
+  summarise(genesym2, n= n()) %>%
+  filter(!(analysis_software_name %in% '')) %>%
+   unique()
+
+Genebytool1 <- Gene2 %>% spread(analysis_software_name, n)
+#rownames(Genebytool) <- (Genebytool$genesym2)
+Genebytool<- Genebytool1 %>% column_to_rownames("genesym2")
+Genebytool[is.na(Genebytool)] <- 0
+#rownames(Genebytool) <- (Gene2$genesym2)
+
+#Creating a binary matrix, where detection Yes = "1" and No = "0"
+Genebytoolm <- as.matrix((Genebytool > 0) + 0)
+
+kappam.fleiss(Genebytoolm[,1:7], detail = TRUE)
+
+Genebytool <- as.matrix((Genebytool > 0) + 0)
+Genebytool <- as.data.frame(Genebytool)
+#Genebytool$Yes <- Genebytool$abricate + Genebytool$amrfinderplus + Genebytool$deeparg + Genebytool$ResFinder + Genebytool$rgi + Genebytool$srax + Genebytool$staramr
+Genebytool <- Genebytool %>% mutate(Yes = (abricate + amrfinderplus + deeparg + `resfinder 4` + rgi + srax + staramr))
+Genebytool <- Genebytool %>% mutate(No = (7-Yes))
+
+rownames(Genebytool) <- (Genebytool1$genesym2)
+
+#I'm literally so stupid for doing this but I was curious if this might make some sense
+## no brooke u r a baby genius
+
+kappa2(Genebytool[,c(1,2)])
+kappa2(Genebytool[,c(1,3)])
+kappa2(Genebytool[,c(1,4)])
+kappa2(Genebytool[,c(1,5)])
+kappa2(Genebytool[,c(1,6)])
+kappa2(Genebytool[,c(1,7)])
+kappa2(Genebytool[,c(2,3)])
+kappa2(Genebytool[,c(2,4)])
+kappa2(Genebytool[,c(2,5)])
+kappa2(Genebytool[,c(2,6)])
+kappa2(Genebytool[,c(2,7)])
+kappa2(Genebytool[,c(3,4)])
+kappa2(Genebytool[,c(3,5)])
+kappa2(Genebytool[,c(3,6)])
+kappa2(Genebytool[,c(3,7)])
+kappa2(Genebytool[,c(4,5)])
+kappa2(Genebytool[,c(4,6)])
+kappa2(Genebytool[,c(4,7)])
+kappa2(Genebytool[,c(5,6)])
+kappa2(Genebytool[,c(5,7)])
+kappa2(Genebytool[,c(6,7)])
+
+Gene2 %>%
+  ggplot(aes(x = genesym2, y = analysis_software_name)) +
+  geom_tile() + 
+  theme_minimal() + 
+  #theme(axis.text.x = element_text(angle = 45, hjust =1))+
+  coord_equal() +
+ # labs(y = "AMR Tool", x = "Drug Class", title = "Detect AMR Drug Classes, 100x Coverage") +
+  scale_fill_viridis(discrete = TRUE) 
+```
+
+now lets do kappa for drug class not gene
+
+```{r kappa drug class }
+#install.packages("KappaGUI")
+#install.packages("reactable")
+library(htmlwidgets)
+library(KappaGUI)
+library(reactable)
+library(irr)
+
+dc2 <- dat5 %>% # filter(true_positive != 'unknown') %>% would want to know for real life but not this analysis
+  select(analysis_software_name, drugclass_new) %>%
+                      group_by(analysis_software_name, drugclass_new) %>%
+  summarise(drugclass_new, n= n()) %>%
+  filter(!(analysis_software_name %in% '')) %>%
+   unique()
+
+classbytool1 <- dc2 %>% spread(analysis_software_name, n)
+#rownames(Genebytool) <- (Genebytool$genesym2)
+classbytool<- classbytool1 %>% column_to_rownames("drugclass_new")
+classbytool[is.na(classbytool)] <- 0
+#rownames(Genebytool) <- (Gene2$genesym2)
+
+#Creating a binary matrix, where detection Yes = "1" and No = "0"
+classbytoolm <- as.matrix((classbytool > 0) + 0)
+
+classbytool <- as.matrix((classbytool > 0) + 0)
+classbytool <- as.data.frame(classbytool)
+#Genebytool$Yes <- Genebytool$abricate + Genebytool$amrfinderplus + Genebytool$deeparg + Genebytool$ResFinder + Genebytool$rgi + Genebytool$srax + Genebytool$staramr
+#classbytool <- classbytool %>% mutate(Yes = (abricate + amrfinderplus + deeparg + fARGene + `resfinder 4` + rgi + srax + staramr + shortbred))
+#classbytool <- classbytool %>% mutate(No = (9-Yes))
+
+rownames(classbytool) <- (classbytool1$drugclass_new)
+
+############# the math part
+PAIRS = combn(names(classbytool),2)
+all_results = apply(PAIRS,2,function(i){
+result = kappa2(classbytool[,i], "unweighted")
+data.frame(
+'comparison'=paste(i,collapse="-"),
+'z-score'=result$statistic,
+'kappa'=result$value,
+'p-value'=result$p.value
+)
+})
+all_results =  do.call(rbind,all_results)
+all_results <- all_results %>% separate(comparison, c('tool1', 'tool2'), sep = "-")
+all_results$kappa <- round(all_results$kappa, 5)
+formatted_res <- xtabs(kappa ~ tool1 + tool2, data=all_results)
+res_out <- as.data.frame.matrix(formatted_res)
+
+rtable <- reactable(res_out, wrap = FALSE,bordered = TRUE, 
+          columns = list(.rownames = colDef(name = "5X Kappa", sortable = TRUE)))
+rtable
+html <- "rtable_5x.html"
+saveWidget(rtable, html)
+all_results
+```
+
+for other coverage levels
+
+```{r}
+
+dc2 <- dat50 %>% # filter(true_positive != 'unknown') %>% would want to know for real life but not this analysis
+  select(analysis_software_name, drugclass_new) %>%
+                      group_by(analysis_software_name, drugclass_new) %>%
+  summarise(drugclass_new, n= n()) %>%
+  filter(!(analysis_software_name %in% '')) %>%
+   unique()
+
+classbytool1 <- dc2 %>% spread(analysis_software_name, n)
+#rownames(Genebytool) <- (Genebytool$genesym2)
+classbytool<- classbytool1 %>% column_to_rownames("drugclass_new")
+classbytool[is.na(classbytool)] <- 0
+#rownames(Genebytool) <- (Gene2$genesym2)
+
+#Creating a binary matrix, where detection Yes = "1" and No = "0"
+classbytoolm <- as.matrix((classbytool > 0) + 0)
+
+classbytool <- as.matrix((classbytool > 0) + 0)
+classbytool <- as.data.frame(classbytool)
+#Genebytool$Yes <- Genebytool$abricate + Genebytool$amrfinderplus + Genebytool$deeparg + Genebytool$ResFinder + Genebytool$rgi + Genebytool$srax + Genebytool$staramr
+#classbytool <- classbytool %>% mutate(Yes = (abricate + amrfinderplus + deeparg + fARGene + `resfinder 4` + rgi + srax + staramr + shortbred))
+#classbytool <- classbytool %>% mutate(No = (9-Yes))
+
+rownames(classbytool) <- (classbytool1$drugclass_new)
+
+############# the math part
+PAIRS = combn(names(classbytool),2)
+all_results = apply(PAIRS,2,function(i){
+result = kappa2(classbytool[,i], "unweighted")
+data.frame(
+'comparison'=paste(i,collapse="-"),
+'z-score'=result$statistic,
+'kappa'=result$value,
+'p-value'=result$p.value
+)
+})
+all_results =  do.call(rbind,all_results)
+all_results <- all_results %>% separate(comparison, c('tool1', 'tool2'), sep = "-")
+all_results$kappa <- round(all_results$kappa, 5)
+formatted_res <- xtabs(kappa ~ tool1 + tool2, data=all_results)
+res_out <- as.data.frame.matrix(formatted_res)
+
+rtable <- reactable(res_out, wrap = FALSE,bordered = TRUE, 
+          columns = list(.rownames = colDef(name = "50X Kappa", sortable = TRUE)))
+
+html <- "rtable_50x.html"
+saveWidget(rtable, html)
+all_results
+rtable
+```
+
+
+```{r dc100}
+###########################################
+###########################################
+dc2 <- dat100 %>% # filter(true_positive != 'unknown') %>% would want to know for real life but not this analysis
+  select(analysis_software_name, drugclass_new) %>%
+                      group_by(analysis_software_name, drugclass_new) %>%
+  summarise(drugclass_new, n= n()) %>%
+  filter(!(analysis_software_name %in% '')) %>%
+   unique()
+
+classbytool1 <- dc2 %>% spread(analysis_software_name, n)
+#rownames(Genebytool) <- (Genebytool$genesym2)
+classbytool<- classbytool1 %>% column_to_rownames("drugclass_new")
+classbytool[is.na(classbytool)] <- 0
+#rownames(Genebytool) <- (Gene2$genesym2)
+
+#Creating a binary matrix, where detection Yes = "1" and No = "0"
+classbytoolm <- as.matrix((classbytool > 0) + 0)
+
+classbytool <- as.matrix((classbytool > 0) + 0)
+classbytool <- as.data.frame(classbytool)
+#Genebytool$Yes <- Genebytool$abricate + Genebytool$amrfinderplus + Genebytool$deeparg + Genebytool$ResFinder + Genebytool$rgi + Genebytool$srax + Genebytool$staramr
+#classbytool <- classbytool %>% mutate(Yes = (abricate + amrfinderplus + deeparg + fARGene + `resfinder 4` + rgi + srax + staramr + shortbred))
+#classbytool <- classbytool %>% mutate(No = (9-Yes))
+
+rownames(classbytool) <- (classbytool1$drugclass_new)
+
+############# the math part
+PAIRS = combn(names(classbytool),2)
+all_results = apply(PAIRS,2,function(i){
+result = kappa2(classbytool[,i], "unweighted")
+data.frame(
+'comparison'=paste(i,collapse="-"),
+'z-score'=result$statistic,
+'kappa'=result$value,
+'p-value'=result$p.value
+)
+})
+all_results =  do.call(rbind,all_results)
+all_results <- all_results %>% separate(comparison, c('tool1', 'tool2'), sep = "-")
+all_results$kappa <- round(all_results$kappa, 5)
+formatted_res <- xtabs(p.value ~ tool1 + tool2, data=all_results)
+res_out <- as.data.frame.matrix(formatted_res)
+
+rtable <- reactable(res_out, wrap = FALSE,bordered = TRUE, 
+          columns = list(.rownames = colDef(name = "100X Kappa", sortable = TRUE)))
+
+html <- "rtable_100x.html"
+saveWidget(rtable, html)
+all_results
+````
+
