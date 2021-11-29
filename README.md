@@ -35,7 +35,12 @@ hAMRoaster has several required and optional commands. At a minimum, users **mus
 * `--shortbred_map` : This flag can point to a specific file that maps the shortbred IDs to their AMR gene names. hAMRoaster included the mapping file created with the shortbred publication in 2016. It is used by default and located in `db_files/ShortBRED_ABR_Metadata.tab`. 
 
 
+Example usage:
+```
+hAMRoaster --ham_out amr-benchmarking/hAMRoaster/study_data/ham_sum.tsv  --name test_conda --AMR_key amr-benchmarking/hAMRoaster/study_data/mock_2_key.csv --db_files amr-benchmarking/hAMRoaster/
 
+## the above is used to test the conda install with locally stored study data (available on this repo)
+```
 
 # Replicating hAMRoaster publication analysis
 
