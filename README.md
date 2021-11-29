@@ -1,3 +1,8 @@
+[![Anaconda-Server Badge](https://anaconda.org/bioconda/hamroaster/badges/installer/conda.svg)](https://conda.anaconda.org/bioconda)
+[![Anaconda-Server Badge](https://anaconda.org/bioconda/hamroaster/badges/downloads.svg)](https://anaconda.org/bioconda/hamroaster)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/ewissel/hamroaster)
+![GitHub](https://img.shields.io/github/license/ewissel/hamroaster)
+
 # hAMRoaster
 
 
@@ -8,12 +13,13 @@ hAMRoaster is an analysis pipeline that can compare the output of nine different
 
 #### Installing hAMRoaster
 
-To install hAMRoaster, run `conda install -c ewissel hamroaster` . (upload to bioconda in progress)
-
-#### Test your install
-
-`hAMRoaster -h` 
-*(notice the caps)*
+hAMRoaster is available on Bioconda
+```
+conda create -n hamroaster -c conda-forge -c bioconda hamroaster
+conda activate hamroaster
+hAMRoaster -h
+```
+*(notice the caps in hAMRoaster)*
 
 ## hAMRoaster Commands
 
@@ -38,7 +44,10 @@ hAMRoaster has several required and optional commands. At a minimum, users **mus
 
 Example usage:
 ```
-hAMRoaster --ham_out amr-benchmarking/hAMRoaster/study_data/ham_sum.tsv  --name test_conda --AMR_key amr-benchmarking/hAMRoaster/study_data/mock_2_key.csv --db_files amr-benchmarking/hAMRoaster/
+hAMRoaster --ham_out amr-benchmarking/hAMRoaster/study_data/ham_sum.tsv  \
+           --name test_conda \
+           --AMR_key amr-benchmarking/hAMRoaster/study_data/mock_2_key.csv \
+           --db_files amr-benchmarking/hAMRoaster/
 
 ## the above is used to test the conda install with locally stored study data (available on this repo)
 ```
@@ -66,9 +75,11 @@ The following will walk through the code for the analysis done as an initial tes
 First, a simulated mock community was created. FASTA files were downloaded for eight taxa selected from NCBI's BioSample for their extensive phenotypic antibiotic resistance. NCBI's tool ART was used to simulate FASTQs from a HiSeq 2500 these FASTA files at three coverage levels - 5, 50, and 100x coverage.
 
 ```
-conda install -c bioconda/label/cf201901 art 
+conda create -n art -c conda-forge -c bioconda/label/cf201901 art
+conda activate art
 
-art_illumina -ss HS25 -sam -i reference.fa -p -l 150 -f 5 -m 200 -s 10 -o paired_dat ## -f flag changed for 5,50,100x coverage
+## -f flag changed for 5,50,100x coverage
+art_illumina -ss HS25 -sam -i reference.fa -p -l 150 -f 5 -m 200 -s 10 -o paired_dat 
 ```
 
 Once this was done for each of the eight mock community members, the simulated fastqs (`paired_dat_[1|2].fq`), the eight fastqs were combined to create one fastq file with even coverage at each coverage levels.
@@ -78,8 +89,7 @@ Once this was done for each of the eight mock community members, the simulated f
 Once fastqs were combined, contigs were assembled using metaSPAdes. 
 
 ```
-conda create -y -n spades-test -c conda-forge -c bioconda spades python=3.7.7 
-
+conda create -y -n spades-test -c conda-forge -c bioconda spades 'python=3.7.7'
 conda activate spades-test 
 
 spades.py --meta  --pe1-1 combo_1.fq --pe1-2 combo_2.fq -o fasta/ 
@@ -96,19 +106,19 @@ This section will walk through how we set up a conda environment for each of the
 shortBRED13 v0.9.3 uses a set of marker genes to search metagenomic data for protein families of interest. The bioBakery team published an AMR gene marker database built from 849 AR protein families derived from the ARDB20 v1.1 and independent curation alongside shortBRED, which is used in this study.
 
 ```
-conda create –n shortbred 
+conda create –n shortbred -c biobakery -c conda-forge -c bioconda shortbred 'python=3.7'
+conda activate shortbred
 
-conda activate shorbred
+## download database  
+mkdir shortbred_database
+cd shortbred_database
+wget https://raw.githubusercontent.com/biobakery/shortbred/master/sample_markers/ShortBRED_ARDB_Evaluation_markers.faa
 
-conda install -c biobakery shortbred 
-  
-conda install python=3.7 
-
-## in a dir called shortbred database 
-
-wget https://raw.githubusercontent.com/biobakery/shortbred/master/sample_markers/ShortBRED_ARDB_Evaluation_markers.faa ## get database  
-
-shortbred_quantify.py --markers /full/path/to/shortbred_database/ShortBRED_ARDB_Evaluation_markers.faa --wgs /full/path/to/fastas/contigs.fasta --results combo_shortbred.tsv --tmp combo_quant --usearch /full/path/to/usearch11.0.667_i86linux32 
+shortbred_quantify.py --markers /full/path/to/shortbred_database/ShortBRED_ARDB_Evaluation_markers.faa \
+                      --wgs /full/path/to/fastas/contigs.fasta \
+                      --results combo_shortbred.tsv \
+                      --tmp combo_quant \
+                      --usearch /full/path/to/usearch11.0.667_i86linux32 
 ```
 
 ### [fARGene](https://github.com/fannyhb/fargene)
@@ -116,9 +126,8 @@ shortbred_quantify.py --markers /full/path/to/shortbred_database/ShortBRED_ARDB_
 fARGene v.0.1 uses Hidden Markov Models to detect AMR genes from short metagenomic data or long read data. This is different from most other tools which compare the reads directly. fARGene has three pre-built models for detecting resistance to quinolone, tetracycline, and beta lactamases, which we test here.
 
 ```
-conda activate python2 
-
-conda install -c conda-forge -c bioconda fargene 
+conda create -n fargene -c conda-forge -c bioconda fargene 
+conda activate fargene
 
 fargene -i fastq/combo* --store-peptides --hmm-model class_a -o fargene_out_fa/class_a --meta --force 
 ```
@@ -130,7 +139,8 @@ The following arguments were used with the `--hmm-model` flag to run all the pre
 AMR Finder Plus v.3.9.3 uses BLASTX translated searches and hierarchical tree of gene families to detect AMR genes. The database is derived from the Pathogen Detection Reference Gene Catalog and was compiled as part of the National Database of Antibiotic Resistant Organisms (NDARO).
 
 ```
-conda install -y -c bioconda ncbi-amrfinderplus 
+conda create -n amrfinderplus -c conda-forge -c bioconda ncbi-amrfinderplus 
+conda activate amrfinderplus
 
 amrfinder -n fasta/contigs.fasta --plus --threads 3 -o AMRFinderPlus_out/combo_out 
 ```
@@ -140,8 +150,8 @@ amrfinder -n fasta/contigs.fasta --plus --threads 3 -o AMRFinderPlus_out/combo_o
 RGI v5.1.1 uses protein homology and SNP models to predict ‘resistomes’. It uses CARD’s protein homolog models as a database. RGI predicts open reading frames (ORFs) using Prodigal, detects homologs with DIAMOND, and matches to CARD’s database and model cut off values. 
 
 ```
-conda create --prefix=/home/ewissel/conda/rgi -c bioconda rgi=5.1.1 -c conda-forge -c defaults  ## note I needed to use the prefix flag for this to work
-
+## note I needed to use the prefix flag for this to work
+conda create --prefix=/home/ewissel/conda/rgi -c bioconda -c conda-forge -c defaults 'rgi=5.1.1'   
 conda activate /home/ewissel/conda/rgi 
 
 rgi -i fasta/contigs.fasta -o rgi_out -t contig 
@@ -156,7 +166,14 @@ Please note that this was run while ResFinder was being updated to version 4.0 (
 ```
 docker build -t resfinder . 
 
-docker run --rm -it -v $(pwd)/db_resfinder/:/usr/src/db_resfinder -v $(pwd)/results/:/usr/src/results resfinder -v $(pwd)/dat/combo_1.fq:/usr/src/combo_1.fq -ifq /usr/src/combo_1.fq  /usr/src/combo_2.fq -acq -db_res /usr/src/db_resfinder -o /usr/src/results 
+docker run --rm -it \
+           -v $(pwd)/db_resfinder/:/usr/src/db_resfinder \
+           -v $(pwd)/results/:/usr/src/results resfinder \
+           -v $(pwd)/dat/combo_1.fq:/usr/src/combo_1.fq \
+           -ifq /usr/src/combo_1.fq  /usr/src/combo_2.fq \
+           -acq \
+           -db_res /usr/src/db_resfinder \
+           -o /usr/src/results 
 ```
 
 ### [ABRicate](https://github.com/tseemann/abricate)
@@ -164,26 +181,20 @@ docker run --rm -it -v $(pwd)/db_resfinder/:/usr/src/db_resfinder -v $(pwd)/resu
 ABRIcate v.1.0.1 takes contig FASTA files as inputs and compared reads against a large database created by compiling several existing database, including NCBI AMRFinder Plus, CARD, ResFinder, ARG-ANNOT, MEGARES, EcOH, PlasmidFinder, VFDB, and Ecoli_VF. ABRIcate reports on acquired AMR genes and not mutational resistance.
 
 ```
-conda activate python3.6 
-
-conda install -c conda-forge -c bioconda -c defaults abricate 
-
-conda install -c bioconda perl-path-tiny 
+conda create -n abricate -c conda-forge -c bioconda -c defaults abricate perl-path-tiny 
+conda activate abricate
 
 abricate --check 
  
 ## if you get path::tiny error, run 
-
 conda update --all 
-
 conda update abricate 
 
 #### 
-
 abricate --list 
 
 abricate fasta/contigs.fasta 
-\abricate assembly.fa.gz 
+abricate assembly.fa.gz 
 ```
 
 ### [sraX](https://github.com/lgpdevtools/sraX#srax)
@@ -191,12 +202,10 @@ abricate fasta/contigs.fasta
 sraX v.1.5 is built as a one step tool; in a single command, sraX downloads a database and aligns contigs to this database with DIAMOND21. By default, sraX uses CARD, though other options can be specified. As we use default settings for all tools, only CARD is used in this study for sraX.
 
 ```
-conda create –name sraX 
-
-conda activate sraX 
+conda create –n srax -c conda-forge -c bioconda srax 
+conda activate srax
 
 sraX –v 
-
 sraX -i sim_dat/fasta/ -o sraX_out 
 ```
 
@@ -205,16 +214,12 @@ sraX -i sim_dat/fasta/ -o sraX_out
 deepARG v.2.0 uses a supervised deep learning based approach for antibiotic resistance gene annotation of metagenomic sequences. It combines three databases—CARD, ARDB, and UNIPROT—and categorizes them into resistance categories. 
 
 ```
-conda create -n deeparg_env python=2.7.18 
-
+conda create -n deeparg_env  -c conda-forge -c bioconda 'python=2.7.18' 'diamond=0.9.24' 
 conda activate deeparg_env 
-
-conda install -c bioconda diamond==0.9.24 
 
 #pip install deeparg==1.0.2 to resolve error
 
 deeparg download_data -o /path/to/local/directory/ 
-
 deeparg predict -i fasta/contigs.fasta -o deeparg_out_combo_fasta --model SS –d full/path/to/downloaded_data/deeparg_data 
  ```
  
@@ -223,10 +228,10 @@ deeparg predict -i fasta/contigs.fasta -o deeparg_out_combo_fasta --model SS –
 starAMR v.0.7.2 uses blast+ to compare contigs against a combined database with data from ResFinder, PointFinder, and PlasmidFinder. 
 
 ```
-conda install -c bioconda staramr==0.7.2 
+conda create -n staramr -c conda-forge -c bioconda 'staramr=0.7.2'
+conda activate staramr
 
-cpan Moo 
-
+cpan Moo
 staramr search fasta/contigs.fasta -o staramr_out 
 ```
 
