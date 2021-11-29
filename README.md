@@ -42,6 +42,20 @@ hAMRoaster --ham_out amr-benchmarking/hAMRoaster/study_data/ham_sum.tsv  --name 
 ## the above is used to test the conda install with locally stored study data (available on this repo)
 ```
 
+### Understanding Output Files
+
+hAMRoaster will create all output files in a directory that the user specified with the `--name` command. Further, all files will have the `--name` argument in the file name so that different runs can be compared without confusion.
+
+* `thanksgiving_ham_{name}.csv`: This file provides the endpoint metrics for each of the tools included in a run. 
+* `cooked_ham_w_true_pos_{name}.csv`: This file contains the icleaned up and labelled version of the input data (drug classes cleaned up and true positive/negative/unknowns assigned)
+
+The less informative but useful for replication files:
+
+* `combo_counts{name}.txt`: This file contains the count data if ALL tools are combined. In our analysis, we did not find these counts particularly useful in understanding tool performance, but we provide them anyway incase others want to replicate our findings. 
+* `grouped_by_tool_drug_class{name}.csv`: This file contains the number of detected AMR genes per drug class per tool. 
+* `canned_ham_{name}.csv`: This contains the results when overlapping genes are removed (i.e. AMR genes that are detected in overlapping regions of the input FASTA/Q are reduced so that none of the AMR genes provided in this file overlap). We did not find this practical for understanding results or getting closer to the "truth", but we are including the file for replication's sake. 
+
+
 # Replicating hAMRoaster publication analysis
 
 The following will walk through the code for the analysis done as an initial test of hAMRoaster and published with the hAMRoaster pipeline, from creating simulated metagenomic sequences to analyzing the data in hAMRoaster. 
