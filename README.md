@@ -1,5 +1,7 @@
 # hAMRoaster
 
+https://anaconda.org/ewissel/hamroaster/badges/version.svg
+
 ## **H**armonized **AMR O**utput comp**A**ri**S**on **T**ool **ER**
 
 
