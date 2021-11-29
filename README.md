@@ -7,7 +7,7 @@ hAMRoaster is an analysis pipeline that can compare the output of nine different
 
 #### Installing hAMRoaster
 
-To install hAMRoaster, run `conda install -c ewissel hamroaster` . (in progress)
+To install hAMRoaster, run `conda install -c ewissel hamroaster` . (upload to bioconda in progress)
 
 #### Test your install
 
