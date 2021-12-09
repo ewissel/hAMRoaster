@@ -574,8 +574,8 @@ counts['sensitivity'] = counts[('true_positive', 'true_positive')] / (counts[('t
 counts['precision'] = counts[('true_positive', 'true_positive')] / ( counts['true_positive', 'false_positive'] + counts[('true_positive', 'true_positive')] )
 ## specificity = true_negative / (true_negative + false_positi
 counts['specificity'] = counts['true-neg'] / (counts['true-neg'] + counts[('true_positive', 'false_positive')])
-## accuracy = (true_positive + true_negative) / (true_positive + false_positive + true_negative)
-counts['accuracy'] = (counts[('true_positive', 'true_positive')] + counts['true-neg']) / (counts[('true_positive', 'true_positive')] + counts['true_positive','false_positive'] + counts['true-neg'] )
+## accuracy = (true_positive + true_negative) / (true_positive + false_positive + true_negative + false_negative)
+counts['accuracy'] = (counts[('true_positive', 'true_positive')] + counts['true-neg']) / (counts[('true_positive', 'true_positive')] + counts['true_positive','false_positive'] + counts['true-neg'] + counts['false-neg'] )
 ## recall = true pos / (true pos  + false neg)
 counts['recall'] = counts[('true_positive', 'true_positive')] / (counts[('true_positive', 'false_positive')] + counts['false-neg'])
 counts['recall'] = pd.to_numeric(counts['recall'])
@@ -587,10 +587,10 @@ counts['recall'] = pd.to_numeric(counts['recall'])
 counts['percent_unclassified'] = counts[('true_positive', 'unknown')] / (counts[('true_positive', 'true_positive')] + counts[('true_positive', 'false_positive')] + counts[('true_positive', 'unknown')])
 
 
-print("Thanksgiving Ham, ", this_run_res, ": ")
+#print("Thanksgiving Ham, ", this_run_res, ": ")
 name = outdir + "thanksgiving_ham_" + res_name + ".csv"
 counts.to_csv(name)
-print(counts) ## print out if interactive; does nothing if command line
+#print(counts) ## print out if interactive; does nothing if command line
 
 
 # # Canned Ham
@@ -678,7 +678,7 @@ counts2['precision'] = counts2[('true_positive','true_positive')] / ( counts2['t
 counts2['specificity'] = counts2['true-neg'] / (counts2['true-neg'] + counts2[('true_positive', 'false_positive')])
 ## if we do true neg (aka if it is not zero:)
 ## accuracy = (true_positive + true_negative) / (true_positive + false_positive + true_negative)
-counts2['accuracy'] = (counts2[('true_positive', 'true_positive')] + counts2['true-neg']) / (counts2[('true_positive','true_positive')] + counts['true_positive','false_positive'] + counts['true-neg'] )
+counts2['accuracy'] = (counts2[('true_positive', 'true_positive')] + counts2['true-neg']) / (counts2[('true_positive','true_positive')] + counts2['true_positive','false_positive'] + counts2['true-neg'] + counts2['false-neg'] )
 ## recall
 ## true pos / (true pos  + false neg)
 counts2['recall'] = counts2[('true_positive','true_positive')] / (counts2[('true_positive', 'true_positive')] + counts2['false-neg'])
@@ -716,7 +716,7 @@ precision = tot_true_pos / ( tot_false_pos + tot_true_pos )
 specificity = tot_true_neg / (tot_true_neg + tot_false_pos)
 
 ## accuracy = (true_positive + true_negative) / (true_positive + false_positive + true_negative)
-accuracy = (tot_true_pos + tot_true_neg) / (tot_true_pos + tot_false_pos + tot_true_neg )
+accuracy = (tot_true_pos + tot_true_neg) / (tot_true_pos + tot_false_pos + tot_true_neg + tot_false_negative)
 
 ## recall
 ## true pos / (true pos  + false neg)
@@ -731,5 +731,9 @@ recall = tot_true_pos / (tot_true_pos + tot_false_neg)
 percent_unclassified = tot_unknown / (tot_true_pos + tot_false_pos + tot_unknown)
 
 print("combo stats (compiled outputs of all tools): ", "\n", "sensitivity: ", sensitivity, "\n specificity",specificity, "\n precision", precision, "\n accuracy", accuracy, "\n recall", recall) 
-print(" percent unknown: ", percent_unclassified)
+print(" percent unknown: ", percent_unclassified,"\n")
 
+print("all combined basic counts\ntot_false_pos", tot_false_pos, "\ntot_true_pos", tot_true_pos,"\ntot_false_neg",tot_false_neg,"\ntot_true_neg",tot_false_neg,"\ntot_unknown",tot_unknown)
+
+
+print("\n\n\nRun Complete. Thank you for using hAMRoaster.")
