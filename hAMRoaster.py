@@ -577,8 +577,9 @@ counts['specificity'] = counts['true-neg'] / (counts['true-neg'] + counts[('true
 ## accuracy = (true_positive + true_negative) / (true_positive + false_positive + true_negative + false_negative)
 counts['accuracy'] = (counts[('true_positive', 'true_positive')] + counts['true-neg']) / (counts[('true_positive', 'true_positive')] + counts['true_positive','false_positive'] + counts['true-neg'] + counts['false-neg'] )
 ## recall = true pos / (true pos  + false neg)
-counts['recall'] = counts[('true_positive', 'true_positive')] / (counts[('true_positive', 'false_positive')] + counts['false-neg'])
-counts['recall'] = pd.to_numeric(counts['recall'])
+#### since sensitivity and recall are functionally the same, removing recall
+#counts['recall'] = counts[('true_positive', 'true_positive')] / (counts[('true_positive', 'true_positive')] + counts['false-neg'])
+#counts['recall'] = pd.to_numeric(counts['recall'])
 # F1 currently faulty (returning values outside expected range) so removing from the pipeline
 ## 2 * (precision * recall) / (precision + recall)
 #counts['F1'] = 2 * ( (counts['precision'] * counts['recall']) / (counts['precision'] + counts['recall']) )
@@ -681,8 +682,8 @@ counts2['specificity'] = counts2['true-neg'] / (counts2['true-neg'] + counts2[('
 counts2['accuracy'] = (counts2[('true_positive', 'true_positive')] + counts2['true-neg']) / (counts2[('true_positive','true_positive')] + counts2['true_positive','false_positive'] + counts2['true-neg'] + counts2['false-neg'] )
 ## recall
 ## true pos / (true pos  + false neg)
-counts2['recall'] = counts2[('true_positive','true_positive')] / (counts2[('true_positive', 'true_positive')] + counts2['false-neg'])
-counts2['recall'] = pd.to_numeric(counts2['recall'])
+#counts2['recall'] = counts2[('true_positive','true_positive')] / (counts2[('true_positive', 'true_positive')] + counts2['false-neg'])
+#counts2['recall'] = pd.to_numeric(counts2['recall'])
 # F1 
 ## 2 * (precision * recall) / (precision + recall)
 #counts2['F1'] = 2 * ( (counts2['precision'] * counts2['recall']) / (counts2['precision'] + counts2['recall']) )
@@ -720,7 +721,7 @@ accuracy = (tot_true_pos + tot_true_neg) / (tot_true_pos + tot_false_pos + tot_t
 
 ## recall
 ## true pos / (true pos  + false neg)
-recall = tot_true_pos / (tot_true_pos + tot_false_neg)
+#recall = tot_true_pos / (tot_true_pos + tot_false_neg)
 
 # F1 
 ## 2 * (precision * recall) / (precision + recall)
@@ -730,7 +731,7 @@ recall = tot_true_pos / (tot_true_pos + tot_false_neg)
 #    counts['F1'] = 0
 percent_unclassified = tot_unknown / (tot_true_pos + tot_false_pos + tot_unknown)
 
-print("combo stats (compiled outputs of all tools): ", "\n", "sensitivity: ", sensitivity, "\n specificity",specificity, "\n precision", precision, "\n accuracy", accuracy, "\n recall", recall) 
+print("combo stats (compiled outputs of all tools): ", "\n", "sensitivity: ", sensitivity, "\n specificity",specificity, "\n precision", precision, "\n accuracy", accuracy, "\n") # recall", recall) 
 print(" percent unknown: ", percent_unclassified,"\n")
 
 print("all combined basic counts\ntot_false_pos", tot_false_pos, "\ntot_true_pos", tot_true_pos,"\ntot_false_neg",tot_false_neg,"\ntot_true_neg",tot_false_neg,"\ntot_unknown",tot_unknown)
