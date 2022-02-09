@@ -92,7 +92,7 @@ subdirs = ['class_a', 'class_b_1_2', 'class_b_3', 'class_c', 'class_d_1', 'class
 if args.fargene:
     for model in subdirs:
         #for res in resx:
-        path = args.fargene #"/home/ewissel/amr-benchmarking/mock_2/" + res + "fargene_out_fa_2/" + model + "/hmmsearchresults/contigs-" + model + "-hmmsearched.out"
+        fpath = str(args.fargene + model + "/hmmsearchresults/contigs-" + model + "-hmmsearched.out") #"/home/ewissel/amr-benchmarking/mock_2/" + res + "fargene_out_fa_2/" + model + "/hmmsearchresults/contigs-" + model + "-hmmsearched.out"
             #print(path)
         f = pd.read_csv(fpath, engine='python', sep = "\t", header = 1, skipfooter = 9)
             ## filter to just what this iteration is
@@ -570,7 +570,8 @@ for n in total_negatives:
 ## sensitivity / specificity analysis
 ## sensitivity = true_positives / (true_positives + false_negatives)
 counts['sensitivity'] = counts[('true_positive', 'true_positive')] / (counts[('true_positive','true_positive')] + counts['false-neg'])
-## precision = true positives / false_positives + true_positives
+print(counts['sensitivity'])
+# precision = true positives / false_positives + true_positives
 counts['precision'] = counts[('true_positive', 'true_positive')] / ( counts['true_positive', 'false_positive'] + counts[('true_positive', 'true_positive')] )
 ## specificity = true_negative / (true_negative + false_positi
 counts['specificity'] = counts['true-neg'] / (counts['true-neg'] + counts[('true_positive', 'false_positive')])
@@ -716,7 +717,7 @@ precision = tot_true_pos / ( tot_false_pos + tot_true_pos )
 specificity = tot_true_neg / (tot_true_neg + tot_false_pos)
 
 ## accuracy = (true_positive + true_negative) / (true_positive + false_positive + true_negative)
-accuracy = (tot_true_pos + tot_true_neg) / (tot_true_pos + tot_false_pos + tot_true_neg + tot_false_negative)
+accuracy = (tot_true_pos + tot_true_neg) / (tot_true_pos + tot_false_pos + tot_true_neg + tot_false_neg)
 
 ## recall
 ## true pos / (true pos  + false neg)
