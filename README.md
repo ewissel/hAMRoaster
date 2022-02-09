@@ -72,7 +72,7 @@ The following will walk through the code for the analysis done as an initial tes
 
 ## Create Simulated Mock Community
 
-First, a simulated mock community was created. FASTA files were downloaded for eight taxa selected from NCBI's BioSample for their extensive phenotypic antibiotic resistance. NCBI's tool ART was used to simulate FASTQs from a HiSeq 2500 these FASTA files at three coverage levels - 5, 50, and 100x coverage.
+First, a simulated mock community was created. FASTA files were downloaded for eight taxa selected from NCBI's BioSample for their extensive phenotypic antibiotic resistance. NCBI's tool ART was used to simulate FASTQs from a HiSeq 2500 these FASTA files at three coverage levels - 5, 50, and 100x coverage. Note that the input fastas need to be unzipped for ART to work!
 
 ```
 conda create -n art -c conda-forge -c bioconda/label/cf201901 art
@@ -95,7 +95,7 @@ conda activate spades-test
 spades.py --meta  --pe1-1 combo_1.fq --pe1-2 combo_2.fq -o fasta/ 
 ```
 
-With this, three mock communities were generated, again, for the three coverage levels (5x,50x, and 100x).
+With this, three mock communities were generated, again, for the three coverage levels (5x,50x, and 100x).If you run into any issues with this section, I recommend checking that the number of reads (lines) and bases (words) is the same across your input files for each step, which you can check with `wc combo_*`. 
 
 ## Running Mock Community through AMR Detection Tools
 
@@ -154,7 +154,7 @@ RGI v5.1.1 uses protein homology and SNP models to predict ‘resistomes’. It 
 conda create --prefix=/home/ewissel/conda/rgi -c bioconda -c conda-forge -c defaults 'rgi=5.1.1'   
 conda activate /home/ewissel/conda/rgi 
 
-rgi -i fasta/contigs.fasta -o rgi_out -t contig 
+rgi main -i fasta/contigs.fasta -o rgi_out -t contig 
 ```
 
 ### [ResFinder](https://cge.cbs.dtu.dk/services/ResFinder/)
@@ -217,7 +217,7 @@ deepARG v.2.0 uses a supervised deep learning based approach for antibiotic resi
 conda create -n deeparg_env  -c conda-forge -c bioconda 'python=2.7.18' 'diamond=0.9.24' 
 conda activate deeparg_env 
 
-#pip install deeparg==1.0.2 to resolve error
+pip install deeparg==1.0.2 # to resolve error, note that I HAD to do this to get deeparg to work properly with each "new" run
 
 deeparg download_data -o /path/to/local/directory/ 
 deeparg predict -i fasta/contigs.fasta -o deeparg_out_combo_fasta --model SS –d full/path/to/downloaded_data/deeparg_data 
@@ -268,4 +268,5 @@ To generate the hAMROnized format for each tool:
  
  ## Analyzing result
  
-This analysis was motivated by the lack of an open-source pipeline for comparing the results once compiled. hAMRoaster was built so that results can easily be compared using several metrics across tools.
+This analysis was motivated by the lack of an open-source pipeline for comparing the results once compiled. hAMRoaster was built so that results can easily be compared using several metrics across tools. The ham_sum.tsv file created in the last step is the main input to hAMRoaster. 
+
