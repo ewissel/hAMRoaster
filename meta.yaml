@@ -1,4 +1,4 @@
-{% set version = "1.0" %}
+{% set version = "1.1" %}
 {% set name = "hAMRoaster" %}
 
 package:
@@ -7,7 +7,7 @@ package:
 
 source:
     url: https://github.com/ewissel/{{ name }}/archive/v{{ version }}.tar.gz
-    sha256: 71f6909d5eddc58c2b1dbe75fa26a004bd9536226df7cd788240a44f88e8b1b2
+    sha256: 09f26dc29e41843f5f4a59c02bcc8754c61bea8b1c986046a69ac055e8194574
 
 requirements:
     run:

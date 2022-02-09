@@ -15,11 +15,7 @@ warnings.filterwarnings('ignore') ## want to avoid print warnings with pandas me
 
 parser = argparse.ArgumentParser()
 
-
-# In[2]:
-##### user arguments
 parser.add_argument('--version', action='version', version='1.0 (initial release)')
-
 parser.add_argument('--fargene', help='full path to fARGene output, if included')
 parser.add_argument('--shortbred', help='full path to shortBRED output (tsv), if included')
 parser.add_argument('--shortbred_map', help='full path to shortBRED mapping file, if included and not using default')
@@ -31,8 +27,6 @@ parser.add_argument('--ham_out', help='output file from hAMRonization (tsv), REQ
 
 ## pull args
 args = parser.parse_args()
-
-
 
 ##Emily's Point To Files for Github
 ## read in card ontologies as new key
@@ -139,8 +133,6 @@ salted_ham = raw_ham.merge(card, left_on = "reference_accession", right_on = "ac
 smol_gene = salted_ham[['gene_symbol','drug_class_card']].drop_duplicates().dropna(thresh=2)
 smol_dict = pd.Series(smol_gene.drug_class_card.values, index=smol_gene.gene_symbol).to_dict()
 
-
-# In[1385]:
 ## make def to apply dict to fill in NAs
 def curedThatHam(x):
     var = ''
@@ -174,7 +166,6 @@ cured_ham = pd.DataFrame(salted_ham)
 ### if drug_class_card is not empty take value
 ## elif drug_class_card is empty and drug_class_ham is not empty, take drug_class_ham
 ## else: (if both columns for drug class are empty) add to counter as lost rows
-
 
 def simplify_drug_class(dat):
     
@@ -450,7 +441,7 @@ cooked_ham['true_positive'] = cooked_ham['drugclass_new'].apply(lambda x: assign
 combo_counts = cooked_ham.true_positive.value_counts()
 combo_name = outdir + "combo_counts_" + res_name + ".txt"
 combo_counts.to_csv(combo_name)
-
+print("\n")
 # first need to do some grouping by tool in cooked_ham
 grouped_ham = cooked_ham.groupby(['analysis_software_name'])
 ham_name = outdir + "cooked_ham_w_true_pos_" + res_name + ".csv"
@@ -524,7 +515,7 @@ for tool in negs:
     
     print("False negatives from ", tool, ": ", tool_falseneg_count)
     print("True negatives from ", tool, ": ", tool_trueneg_count)
-
+print("\n\n")
 
 counts = pd.merge(pos_count, neg_count, right_on = "tool", how = "outer",left_index=True, right_index=False)  
 #counts ## this spits out an error, but we can ignore it bc it's due to the double labels from pos counts
@@ -563,18 +554,35 @@ for n in total_negatives:
 #print("False negatives: ", tot_falseneg_count)
 #print("True negatives: ", tot_trueneg_count)
 
+## write in a check for the cols we expect
+if ('true_positive','false_positive') in counts.columns:
+	pass
+else:
+	counts[('true_positive', 'false_positive') ] = int(0)
+
+if ('true_positive','unknown') in counts.columns:
+	pass
+else:
+	counts[('true_positive', 'unknown') ] = int(0)
 
 # # Thanksgiving Ham
 # 
 # The following table is what all this code is for. 
 ## sensitivity / specificity analysis
 ## sensitivity = true_positives / (true_positives + false_negatives)
-counts['sensitivity'] = counts[('true_positive', 'true_positive')] / (counts[('true_positive','true_positive')] + counts['false-neg'])
-print(counts['sensitivity'])
+try:
+	counts['sensitivity'] = counts[('true_positive', 'true_positive')] / (counts[('true_positive','true_positive')] + counts['false-neg'])
+except ZeroDivisionError:
+	print('can\'t calculate sensitivity because no values detected. Are you sure your data looks right?')
+
 # precision = true positives / false_positives + true_positives
 counts['precision'] = counts[('true_positive', 'true_positive')] / ( counts['true_positive', 'false_positive'] + counts[('true_positive', 'true_positive')] )
 ## specificity = true_negative / (true_negative + false_positi
-counts['specificity'] = counts['true-neg'] / (counts['true-neg'] + counts[('true_positive', 'false_positive')])
+try:
+	counts['specificity'] = counts['true-neg'] / (counts['true-neg'] + counts[('true_positive', 'false_positive')])
+except ZeroDivisionError:
+	print("Can't calculate specificity because there are no observed true negatives or false positives.")
+	counts['specificity'] = int(0)
 ## accuracy = (true_positive + true_negative) / (true_positive + false_positive + true_negative + false_negative)
 counts['accuracy'] = (counts[('true_positive', 'true_positive')] + counts['true-neg']) / (counts[('true_positive', 'true_positive')] + counts['true_positive','false_positive'] + counts['true-neg'] + counts['false-neg'] )
 ## recall = true pos / (true pos  + false neg)
@@ -593,13 +601,12 @@ counts['percent_unclassified'] = counts[('true_positive', 'unknown')] / (counts[
 name = outdir + "thanksgiving_ham_" + res_name + ".csv"
 counts.to_csv(name)
 #print(counts) ## print out if interactive; does nothing if command line
-
+print("\nYou have new results! Check it out in ", name, "\n")
 
 # # Canned Ham
 # condensing the results
-# 
+# note that these aren't particularly informative. it's here in case reviewers really want it. 
 
-# In[1424]:
 cooked_ham = cooked_ham.assign(condensed_gene = cooked_ham.groupby('analysis_software_name')['input_gene_start'].shift(-1))
 
 def condense_results(df):
@@ -670,17 +677,37 @@ for tool in negs2:
 ## merge this all together
 counts2 = pd.merge(pos_count2, neg_count2, right_on = "tool", how = "outer",left_index=True, right_index=False)  
 #counts2 ## this spits out an error, but we can ignore it 
+## write in a check for the cols we expect
+if ('true_positive','false_positive') in counts2.columns:
+	pass
+else:
+	counts2[('true_positive', 'false_positive') ] = int(0)
+
+if ('true_positive','unknown') in counts2.columns:
+	pass
+else:
+	counts2[('true_positive', 'unknown') ] = int(0)
 
 ## sensitivity / specificity analysis
 ## sensitivity = true_positives / (true_positives + false_negatives)
-counts2['sensitivity'] = counts2[('true_positive','true_positive')] / (counts2[('true_positive','true_positive')] + counts2['false-neg'])
+try:
+    counts2['sensitivity'] = counts2[('true_positive','true_positive')] / (counts2[('true_positive','true_positive')] + counts2['false-neg'])
+except ZeroDivisionError:
+    counts2['sensitivity'] = int(0)
 ## precision
 counts2['precision'] = counts2[('true_positive','true_positive')] / ( counts2['true_positive','false_positive'] + counts2[('true_positive','true_positive')] )
 ## specificity = true_negative / (true_negative + false_positive)
-counts2['specificity'] = counts2['true-neg'] / (counts2['true-neg'] + counts2[('true_positive', 'false_positive')])
-## if we do true neg (aka if it is not zero:)
+try: 
+    counts2['specificity'] = counts2['true-neg'] / (counts2['true-neg'] + counts2[('true_positive', 'false_positive')])
+except ZeroDivisionError:
+    print("Can't calculate specificity because you have no observed true negatives or false positives. Is this expected?")
+    counts2['specificity'] = int(0)
+    ## if we do true neg (aka if it is not zero:)
 ## accuracy = (true_positive + true_negative) / (true_positive + false_positive + true_negative)
-counts2['accuracy'] = (counts2[('true_positive', 'true_positive')] + counts2['true-neg']) / (counts2[('true_positive','true_positive')] + counts2['true_positive','false_positive'] + counts2['true-neg'] + counts2['false-neg'] )
+try:
+    counts2['accuracy'] = (counts2[('true_positive', 'true_positive')] + counts2['true-neg']) / (counts2[('true_positive','true_positive')] + counts2['true_positive','false_positive'] + counts2['true-neg'] + counts2['false-neg'] )
+except ZeroDivisionError:
+    counts2['accuracy'] = 0
 ## recall
 ## true pos / (true pos  + false neg)
 #counts2['recall'] = counts2[('true_positive','true_positive')] / (counts2[('true_positive', 'true_positive')] + counts2['false-neg'])
@@ -715,8 +742,10 @@ sensitivity = tot_true_pos / (tot_true_pos + tot_false_neg)
 precision = tot_true_pos / ( tot_false_pos + tot_true_pos )
 
 ## specificity = true_negative / (true_negative + false_positive)
-specificity = tot_true_neg / (tot_true_neg + tot_false_pos)
-
+try:
+    specificity = tot_true_neg / (tot_true_neg + tot_false_pos)
+except ZeroDivisionError:
+    specificity = "0" 
 ## accuracy = (true_positive + true_negative) / (true_positive + false_positive + true_negative)
 accuracy = (tot_true_pos + tot_true_neg) / (tot_true_pos + tot_false_pos + tot_true_neg + tot_false_neg)
 
