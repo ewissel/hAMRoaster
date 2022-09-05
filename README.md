@@ -176,6 +176,16 @@ docker run --rm -it \
            -o /usr/src/results 
 ```
 
+* Note: As of August 2022 the conda version of ResFinder4 is working just fine! Here is the code I used. 
+
+```
+conda activate resfinder4 
+
+conda install -c dfornika resfinder  
+
+# Example of running resfinder 
+run_resfinder.py -o path/to/outdir  -l 0.6 -t 0.8 --acquired –ifa –u  
+```
 ### [ABRicate](https://github.com/tseemann/abricate)
 
 ABRIcate v.1.0.1 takes contig FASTA files as inputs and compared reads against a large database created by compiling several existing database, including NCBI AMRFinder Plus, CARD, ResFinder, ARG-ANNOT, MEGARES, EcOH, PlasmidFinder, VFDB, and Ecoli_VF. ABRIcate reports on acquired AMR genes and not mutational resistance.
@@ -199,7 +209,7 @@ abricate assembly.fa.gz
 
 ### [sraX](https://github.com/lgpdevtools/sraX#srax)
 
-sraX v.1.5 is built as a one step tool; in a single command, sraX downloads a database and aligns contigs to this database with DIAMOND21. By default, sraX uses CARD, though other options can be specified. As we use default settings for all tools, only CARD is used in this study for sraX.
+sraX v.1.5 is built as a one step tool; in a single command, sraX downloads a database and aligns contigs to this database with DIAMOND21. By default, sraX uses CARD, though other options can be specified. As we use default settings for all tools, only CARD is used in this study for sraX. Reproducibility note: We had to run sraX interactively in order for this to work properly on our latest iteration of data processing (as opposed to launching jobs in the background with something like `nohup`). 
 
 ```
 conda create –n srax -c conda-forge -c bioconda srax 
@@ -247,19 +257,19 @@ At the time of analysis, hAMRonization was under development and documentation w
 
 To generate the hAMROnized format for each tool:
 
-* ABRicate: `hamronize abricate  abricate_out/abricate_out.txt --reference_database_version db_v_1 --analysis_software_version tool_v_1 --format tsv` 
+* ABRicate: `hamronize abricate  abricate_out/abricate_out.txt --reference_database_version 2021-Mar-27 --analysis_software_version v.1.0.1 --format tsv ` 
 
-* starAMR: `hamronize staramr staramr_out/resfinder.tsv --format tsv --output hamr_out/staramr.tsv --reference_database_version db_v_1 --analysis_software_version tool_v_1 `  
+* starAMR: `hamronize staramr staramr_out/resfinder.tsv --format tsv --output hamr_out/staramr.tsv --reference_database_version 050218 --analysis_software_version v0.7.2 `  
 
-* deepARG: `hamronize deeparg deeparg_out/deeparg_out_combo_fasta.mapping.ARG --reference_database_version db_v_1 --analysis_software_version tool_v_1 --format tsv --output ham_out/deeparg_out.tsv `
+* deepARG: `hamronize deeparg deeparg_out/out.mapping.ARG --reference_database_version v0.19 --analysis_software_version v2.0 --format tsv --output hamr_out/deeparg.tsv  `
 
-* sraX: `hamronize srax sraX_out/Results/Summary_files/sraX_detected_ARGs.tsv --reference_database_version db_v_1 --analysis_software_version tool_v_1 --format tsv --output ham_out/srax_out.tsv  --reference_database_id basic --input_file_name sraX_detected_ARGs.tsv `
+* sraX: `hamronize srax sraX_out/Results/Summary_files/sraX_detected_ARGs.tsv --reference_database_version 3.0.7  --analysis_software_version v1.5 --format tsv --output hamr_out/srax.tsv  --reference_database_id basic --input_file_name sample_name `
 
-* ResFinder (txt file from wb-based processing): `hamronize resfinder4 ResFinder_results_tab_5x.txt  --reference_database_version db_v_1 --analysis_software_version tool_v_1 --output ham_out/resfinder_out.tsv --input_file_name contigs.fasta `
+* ResFinder: `hamronize resfinder4 resfinder_out/ResFinder_results_tab.txt   --reference_database_version 2021-04-13 --analysis_software_version v4.1.11 --output hamr_out/resfinder.tsv --input_file_name sample_name`
 
-* AMRFinderPlus: `hamronize  amrfinderplus AMRFinderPlus_out/combo_out --format tsv --output ham_out/amrfinderplus.tsv --analysis_software_version tool_v_1 --reference_database_version db_v_1 --input_file_name combo_contig_fasta_out `
+* AMRFinderPlus: hamronize  amrfinderplus AMRFinder_out/AMRFinderPlus_out --format tsv --output hamr_out/amrfinderplus.tsv --analysis_software_version v3.9.3 --reference_database_version  v3.10 --input_file_name sample_name `
 
-* RGI: `hamronize rgi --input_file_name rgi_report --analysis_software_version rgi_v1 --reference_database_version card_v1 rgi_out/rgi_out `
+* RGI: `hamronize rgi --input_file_name sample_name --analysis_software_version 5.1.1  --reference_database_version v3.0.9 rgi_out/rgi_out`
  
  
  To combine the hamronized outputs into one table: 
