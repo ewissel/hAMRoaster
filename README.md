@@ -29,15 +29,17 @@ hAMRoaster has several required and optional commands. At a minimum, users **mus
 
 * `--name`: a unique identifier for this run. This name will be the name of the output directory created for the hAMRoaster run, and the name will be included in all the output file names. 
 
-* `--AMR_key` : the full path to the file of known AMR phenotypes; the file is expected to be a tsv in the following format: taxa_name, antibiotic tested, result of antibiotic resting, and testing standard. This matches the output for the [NCBI BioSample AntiBioGram](https://www.ncbi.nlm.nih.gov/biosample/?term=antibiogram%5bfilter%5d). An example file is in `study_data/mock_2_key.csv`.
+* `--AMR_key` : the full path to the file of known AMR phenotypes; the file is expected to be a tsv in the following format: taxa_name, antibiotic tested, result of antibiotic resting, and testing standard. This matches the output for the [NCBI BioSample AntiBioGram](https://www.ncbi.nlm.nih.gov/biosample/?term=antibiogram%5bfilter%5d). An example file is in `study_data/mock_2_key.csv`. If you are using the `--groupby_sample` flag, you want the sample names in the AMR_key to but the same as the `--input_file_names` flag in hamroanizer and in the `--ham_out` flag. 
 
 ##### Optional Arguments
 
 * `--abx_map` : While hAMRoaster comes with it's own classifications for antibiotics and their drug class, users can provide their own classification scheme. This expects the drug class to in the first column, and the antibiotics or drugs that fit into that drug class in the next two columns. hAMRoaster's default classification is located in `db_files/cleaned_drug_class_key.csv`. 
 
-* `--fargene` : If users want to test the output of fARGene runs, they can point to the directory of the fARGene output. Because fARGene requires multiple runs for all the built in models, hAMRoaster expects users to point to a generic `fargene_output` directory, and for each run to be a subdirectory named after the AMR model analyzed for that run. For example, for a fARGene run with the model flag `class_a`, hAMRoaster expects their to be a directory named `class_a` within the fargene output directory specified with this parameter, and that the `class_a` subdirectory contains the output of that fARGene run. 
+* `--groupby_sample` : Should results from the mock community key be examined per sample (True), or as one whole community (False). The default is 'False'. 
 
-* `--shortbred` : If users want to test the output of a shortBRED run, they can use this flag to specifcy the full path to the output file from shortbred (include the file in the path). 
+* `--fargene` : If users want to test the output of fARGene runs, they can point to the directory of the fARGene output. Because fARGene requires multiple runs for all the built in models, hAMRoaster expects users to point to a generic `fargene_output` directory, and for each run to be a subdirectory named after the AMR model analyzed for that run. For example, for a fARGene run with the model flag `class_a`, hAMRoaster expects their to be a directory named `class_a` within the fargene output directory specified with this parameter, and that the `class_a` subdirectory contains the output of that fARGene run. hAMRoaster can handle empty files in the output directories, such as when fARGene runs but does not detect AMR genes. 
+
+* `--shortbred` : If users want to test the output of a shortBRED run, they can use this flag to specifcy the full path to the output directory for shortbred (do not include the file in the path; can handle multiple files in the output directory). 
 
 * `--shortbred_map` : This flag can point to a specific file that maps the shortbred IDs to their AMR gene names. hAMRoaster included the mapping file created with the shortbred publication in 2016. It is used by default and located in `db_files/ShortBRED_ABR_Metadata.tab`. 
 
