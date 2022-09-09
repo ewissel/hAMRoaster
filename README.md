@@ -273,6 +273,7 @@ To generate the hAMROnized format for each tool:
 
 * RGI: `hamronize rgi --input_file_name sample_name --analysis_software_version 5.1.1  --reference_database_version v3.0.9 rgi_out/rgi_out`
  
+           * Note: hamronizer currently filters out mutational resistance from RGI, so this is a caveat to keep in mind
  
  To combine the hamronized outputs into one table: 
  
