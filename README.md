@@ -72,7 +72,7 @@ The less informative but useful for replication files:
 
 The following will walk through the code for the analysis done as an initial test of hAMRoaster and published with the hAMRoaster pipeline, from creating simulated metagenomic sequences to analyzing the data in hAMRoaster. 
 
-## Create Simulated Mock Community
+## Create Simulated Mock Community with extensive resistance
 
 First, a simulated mock community was created. FASTA files were downloaded for eight taxa selected from NCBI's BioSample for their extensive phenotypic antibiotic resistance. NCBI's tool ART was used to simulate FASTQs from a HiSeq 2500 these FASTA files at three coverage levels - 5, 50, and 100x coverage. Note that the input fastas need to be unzipped for ART to work!
 
@@ -98,6 +98,11 @@ spades.py --meta  --pe1-1 combo_1.fq --pe1-2 combo_2.fq -o fasta/
 ```
 
 With this, three mock communities were generated, again, for the three coverage levels (5x,50x, and 100x).If you run into any issues with this section, I recommend checking that the number of reads (lines) and bases (words) is the same across your input files for each step, which you can check with `wc combo_*`. 
+
+## Creating a community with Restrictive Resistance
+
+We created a community profile with previously simulated human metagenomes from [CAMISIM](https://frl.publisso.de/data/frl:6425518/gastrooral/) and added a single AMR isolate collected from a human infection at 1x coverage to simulate a human metagenome with restrictive phenotypic resistance. We included samples 0 through 5 from CAMISIM and combined these with one of two isolates, [SRR17789825](https://www.ncbi.nlm.nih.gov/biosample/25295985) for even sample numbers and  [SRR16683675](https://www.ncbi.nlm.nih.gov/biosample/22824038) for odd sample numbers.
+
 
 ## Running Mock Community through AMR Detection Tools
 
@@ -269,7 +274,7 @@ To generate the hAMROnized format for each tool:
 
 * ResFinder: `hamronize resfinder4 resfinder_out/ResFinder_results_tab.txt   --reference_database_version 2021-04-13 --analysis_software_version v4.1.11 --output hamr_out/resfinder.tsv --input_file_name sample_name`
 
-* AMRFinderPlus: hamronize  amrfinderplus AMRFinder_out/AMRFinderPlus_out --format tsv --output hamr_out/amrfinderplus.tsv --analysis_software_version v3.9.3 --reference_database_version  v3.10 --input_file_name sample_name `
+* AMRFinderPlus: `hamronize  amrfinderplus AMRFinder_out/AMRFinderPlus_out --format tsv --output hamr_out/amrfinderplus.tsv --analysis_software_version v3.9.3 --reference_database_version  v3.10 --input_file_name sample_name `
 
 * RGI: `hamronize rgi --input_file_name sample_name --analysis_software_version 5.1.1  --reference_database_version v3.0.9 rgi_out/rgi_out`
  
