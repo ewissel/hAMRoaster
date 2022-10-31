@@ -59,13 +59,14 @@ hAMRoaster --ham_out amr-benchmarking/hAMRoaster/study_data/ham_sum.tsv  \
 hAMRoaster will create all output files in a directory that the user specified with the `--name` command. Further, all files will have the `--name` argument in the file name so that different runs can be compared without confusion.
 
 * `thanksgiving_ham_{name}.csv`: This file provides the endpoint metrics for each of the tools included in a run. 
-* `cooked_ham_w_true_pos_{name}.csv`: This file contains the icleaned up and labelled version of the input data (drug classes cleaned up and true positive/negative/unknowns assigned)
+* `cooked_ham_w_true_pos_{name}.csv`: This file contains the cleaned up and labelled version of the input data (drug classes cleaned up and true positive/negative/unknowns assigned)
 
 The less informative but useful for replication files:
 
-* `combo_counts{name}.txt`: This file contains the count data if ALL tools are combined. In our analysis, we did not find these counts particularly useful in understanding tool performance, but we provide them anyway incase others want to replicate our findings. 
+ 
 * `grouped_by_tool_drug_class{name}.csv`: This file contains the number of detected AMR genes per drug class per tool. 
-* `canned_ham_{name}.csv`: This contains the results when overlapping genes are removed (i.e. AMR genes that are detected in overlapping regions of the input FASTA/Q are reduced so that none of the AMR genes provided in this file overlap). We did not find this practical for understanding results or getting closer to the "truth", but we are including the file for replication's sake. 
+* depreciated, version 1 only: `canned_ham_{name}.csv`: This contains the results when overlapping genes are removed (i.e. AMR genes that are detected in overlapping regions of the input FASTA/Q are reduced so that none of the AMR genes provided in this file overlap). We did not find this practical for understanding results or getting closer to the "truth", but we are including the file for replication's sake. 
+* depreciated, version 1 only: `combo_counts{name}.txt`: This file contains the count data if ALL tools are combined. In our analysis, we did not find these counts particularly useful in understanding tool performance, but we provide them anyway incase others want to replicate our findings.
 
 
 # Replicating hAMRoaster publication analysis
@@ -97,7 +98,7 @@ conda activate spades-test
 spades.py --meta  --pe1-1 combo_1.fq --pe1-2 combo_2.fq -o fasta/ 
 ```
 
-With this, three mock communities were generated, again, for the three coverage levels (5x,50x, and 100x).If you run into any issues with this section, I recommend checking that the number of reads (lines) and bases (words) is the same across your input files for each step, which you can check with `wc combo_*`. 
+With this, three mock communities were generated for the three coverage levels (5x,50x, and 100x).If you run into any issues with this section, I recommend checking that the number of reads (lines) and bases (words) is the same across your input files for each step, which you can check with `wc combo_*`. 
 
 ## Creating a community with Restrictive Resistance
 
